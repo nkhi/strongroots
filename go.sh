@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Initialize data files if they don't exist
+./scripts/init-data.sh
+
 # Start the server in the background
 cd server
 node index.js &
