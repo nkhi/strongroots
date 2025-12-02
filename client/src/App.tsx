@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import './App.css';
-import { CalendarCheck, ListChecks, Calendar, TipJarIcon, LightbulbIcon, BooksIcon, ChartLineUpIcon, ListDashes, TreeIcon, Pulse, HeartbeatIcon } from '@phosphor-icons/react';
+import { CalendarCheck, ListChecks, Calendar, TipJarIcon, LightbulbIcon, ChartLineUpIcon, ListDashes, TreeIcon, HeartbeatIcon } from '@phosphor-icons/react';
 import { HabitTracker } from './components/HabitTracker';
 import { Todos } from './components/Todos';
 import { Diary } from './components/Diary';
 import { Next } from './components/Next';
 import { Lists } from './components/Lists';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://0.0.0.0:3000';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'habits' | 'todos' | 'logs' | 'memos' | 'next' | 'lists'>('habits');
@@ -95,7 +95,7 @@ function App() {
           <div className="memos-container">
             <div className="memos-loading-overlay" />
             <iframe
-              src="http://localhost:5230/"
+              src="http://0.0.0.0:5230/"
               className="memos-frame"
               title="Memos"
             />

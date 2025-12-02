@@ -3,7 +3,8 @@ import { HabitAPI } from '../api';
 import type { Habit, HabitEntry, Vlog } from '../types';
 import { DateUtility, getGrade, generateId } from '../utils';
 import VlogModal from './VlogModal';
-import { VideoCameraIcon, SunHorizonIcon, MoonIcon, HeartIcon, TreeIcon, BarbellIcon, ResizeIcon } from '@phosphor-icons/react';
+import ChartModal from './ChartModal';
+import { VideoCameraIcon, SunHorizonIcon, MoonIcon, HeartIcon, TreeIcon, BarbellIcon, ResizeIcon, ChartLineUpIcon, PresentationIcon, PresentationChartIcon } from '@phosphor-icons/react';
 
 const CONFIG = {
   startDate: new Date('2025-11-09T00:00:00'),
@@ -21,6 +22,7 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
   const [dates, setDates] = useState<Date[]>([]);
   const [vlogs, setVlogs] = useState<Map<string, Vlog>>(new Map());
   const [viewingVlog, setViewingVlog] = useState<Vlog | null>(null);
+  const [showChart, setShowChart] = useState(false);
   const [loomSupported, setLoomSupported] = useState(false);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const api = useRef(new HabitAPI(apiBaseUrl)).current;
@@ -44,6 +46,55 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
       days
     }));
   }, [dates]);
+
+  const chartData = useMemo(() => {
+    if (!showChart) return [];
+    return weeks.map(week => {
+      const weekStart = new Date(week.key + 'T00:00:00');
+      const weekEnd = week.end;
+
+      const dataPoint: any = {
+        name: `${weekStart.toLocaleDateString('en-US', { month: 'short' })} ${DateUtility.getDayNumber(weekStart)}`,
+      };
+
+      habits.forEach(habit => {
+        // Calculate stats logic duplicated here to avoid dependency issues or extract it
+        // Actually we can call getHabitStats if we are careful, but getHabitStats uses state.
+        // It's safer to inline the logic or ensure getHabitStats is stable/accessible.
+        // Since getHabitStats is defined in the component, we can call it.
+        // But we need to make sure we don't cause infinite loops if we were to put it in dependencies.
+        // Here we are inside useMemo, so calling the function is fine as long as we depend on the state it uses.
+
+        // Re-implementing logic to be safe and clear within useMemo
+        const isWeekdays = habit.defaultTime === 'weekdays';
+        let successCount = 0;
+        let totalCount = 0;
+        let curr = new Date(weekStart);
+        while (curr <= weekEnd) {
+          const isWeekend = curr.getDay() === 0 || curr.getDay() === 6;
+          if (isWeekdays && isWeekend) {
+            curr.setDate(curr.getDate() + 1);
+            continue;
+          }
+
+          const dateStr = DateUtility.formatDate(curr);
+          const key = `${dateStr}_${habit.id}`;
+          const entry = entries.get(key);
+
+          if (entry && (entry.state === 1 || entry.state === 3)) {
+            successCount++;
+          }
+          totalCount++;
+          curr.setDate(curr.getDate() + 1);
+        }
+
+        const percentage = totalCount === 0 ? 0 : (successCount / totalCount) * 100;
+        dataPoint[habit.id] = Math.round(percentage);
+      });
+
+      return dataPoint;
+    });
+  }, [showChart, weeks, habits, entries]);
 
   useEffect(() => {
     loadData();
@@ -344,7 +395,27 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
         <table id="habit-table">
           <thead id="table-head">
             <tr>
-              <th></th>
+              <th className="trends-header">
+                <button
+                  className="trends-button"
+                  onClick={() => setShowChart(true)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#888',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    gap: '4px'
+                  }}
+                  title="View Trends"
+                >
+                  <PresentationChartIcon size={24} weight="duotone" /> <span>Trends</span>
+                </button>
+              </th>
               {weeks.map((week) => {
                 const isExpanded = expandedWeeks.has(week.key);
                 const hasVlog = vlogs.has(week.key);
@@ -522,6 +593,14 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
         <VlogModal
           vlog={viewingVlog}
           onClose={() => setViewingVlog(null)}
+        />
+      )}
+
+      {showChart && (
+        <ChartModal
+          data={chartData}
+          habits={habits}
+          onClose={() => setShowChart(false)}
         />
       )}
     </>

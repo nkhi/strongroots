@@ -499,6 +499,19 @@ button, input, select, textarea {
   height: 20px;
 }
 
+/* Trends Button */
+.trends-button svg,
+.trends-button span {
+  opacity: 0;
+  transition: opacity 0.2s ease, color 2s ease;
+}
+
+.trends-header:hover .trends-button svg,
+.trends-header:hover .trends-button span {
+  opacity: 1;
+  color: white;
+}
+
 /* Loom Recorder Modal */
 .loom-recorder-modal {
   position: fixed;
@@ -813,6 +826,11 @@ button, input, select, textarea {
 }
 
 .dayweek-column.focused {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+.question-view-column {
   opacity: 1;
   filter: grayscale(0%);
 }

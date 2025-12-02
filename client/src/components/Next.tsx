@@ -14,7 +14,7 @@ interface Note {
     startedAt: string | null;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://0.0.0.0:3000';
 
 export const Next: React.FC = () => {
     const [notes, setNotes] = useState<Note[]>([]);

@@ -7,6 +7,43 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Comprehensive logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`\n[SERVER] ${timestamp}`);
+  console.log(`[SERVER] → ${req.method} ${req.path}`);
+  
+  if (Object.keys(req.query).length > 0) {
+    console.log(`[SERVER]   Query:`, req.query);
+  }
+  
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`[SERVER]   Body:`, JSON.stringify(req.body, null, 2));
+  }
+
+  // Capture the original send and json functions
+  const originalSend = res.send;
+  const originalJson = res.json;
+  
+  res.send = function(data) {
+    console.log(`[SERVER] ← ${res.statusCode} ${req.method} ${req.path}`);
+    if (res.statusCode >= 400) {
+      console.log(`[SERVER]   Error Response:`, data);
+    }
+    return originalSend.call(this, data);
+  };
+  
+  res.json = function(data) {
+    console.log(`[SERVER] ← ${res.statusCode} ${req.method} ${req.path}`);
+    if (res.statusCode >= 400) {
+      console.log(`[SERVER]   Error Response:`, data);
+    }
+    return originalJson.call(this, data);
+  };
+
+  next();
+});
+
 const HABITS_FILE = path.join(__dirname, '../data/habits.csv');
 const ENTRIES_FILE = path.join(__dirname, '../data/entries.csv');
 const VLOGS_FILE = path.join(__dirname, '../data/vlogs.csv');
@@ -420,7 +457,10 @@ app.delete('/lists/:id', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`);
-  console.log('Using local CSV files for storage');
+  console.log('\n' + '='.repeat(60));
+  console.log(`[SERVER] 🚀 API running on http://0.0.0.0:${PORT}`);
+  console.log(`[SERVER] 📁 Using local CSV files for storage`);
+  console.log(`[SERVER] 📝 Verbose logging enabled`);
+  console.log('='.repeat(60) + '\n');
 });
 

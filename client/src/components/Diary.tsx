@@ -4,12 +4,14 @@ import { HabitAPI } from '../api';
 import type { DiaryEntry, Question } from '../types';
 import { generateId } from '../utils';
 import { DayWeek, type DayWeekColumnData } from './DayWeek';
+import { QuestionView } from './QuestionView';
 
 interface DiaryProps {
   apiBaseUrl: string;
 }
 
 export function Diary({ apiBaseUrl }: DiaryProps) {
+  const [viewMode, setViewMode] = useState<'day' | 'question'>('day');
   const [diary, setDiary] = useState<Record<string, DiaryEntry[]>>({});
   const [questions, setQuestions] = useState<Question[]>([]);
   const [newQuestionTexts, setNewQuestionTexts] = useState<Record<string, string>>({});
@@ -150,11 +152,16 @@ export function Diary({ apiBaseUrl }: DiaryProps) {
     );
   };
 
+  if (viewMode === 'question') {
+    return <QuestionView apiBaseUrl={apiBaseUrl} onBack={() => setViewMode('day')} />;
+  }
+
   return (
     <DayWeek
       renderColumn={renderDiaryColumn}
       className="diary-scroll-container"
       columnClassName="diary-column"
+      onMoreClick={() => setViewMode('question')}
     />
   );
 }
