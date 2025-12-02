@@ -59,52 +59,59 @@ else
   echo "✓ vlogs.csv exists"
 fi
 
-# ============================================
-# JSON Files
-# ============================================
-
-# tasks.json
-if [ ! -f "$DATA_DIR/tasks.json" ]; then
-  echo "📝 Creating tasks.json with schema..."
-  cat > "$DATA_DIR/tasks.json" << 'EOF'
-{}
+# tasks.csv
+if [ ! -f "$DATA_DIR/tasks.csv" ]; then
+  echo "📝 Creating tasks.csv with schema..."
+  cat > "$DATA_DIR/tasks.csv" << 'EOF'
+id,text,completed,date,createdAt,category,state
 EOF
-  echo "✅ Created tasks.json"
+  echo "✅ Created tasks.csv"
 else
-  echo "✓ tasks.json exists"
+  echo "✓ tasks.csv exists"
 fi
 
-# diary.json
-if [ ! -f "$DATA_DIR/diary.json" ]; then
-  echo "📝 Creating diary.json with schema..."
-  cat > "$DATA_DIR/diary.json" << 'EOF'
-{}
+# next.csv
+if [ ! -f "$DATA_DIR/next.csv" ]; then
+  echo "📝 Creating next.csv with schema..."
+  cat > "$DATA_DIR/next.csv" << 'EOF'
+id,title,content,color,size,createdAt,deletedAt,startedAt
 EOF
-  echo "✅ Created diary.json"
+  echo "✅ Created next.csv"
 else
-  echo "✓ diary.json exists"
+  echo "✓ next.csv exists"
 fi
 
-# next.json
-if [ ! -f "$DATA_DIR/next.json" ]; then
-  echo "📝 Creating next.json with schema..."
-  cat > "$DATA_DIR/next.json" << 'EOF'
-[]
+# lists.csv
+if [ ! -f "$DATA_DIR/lists.csv" ]; then
+  echo "📝 Creating lists.csv with schema..."
+  cat > "$DATA_DIR/lists.csv" << 'EOF'
+id,title,color,createdAt
 EOF
-  echo "✅ Created next.json"
+  echo "✅ Created lists.csv"
 else
-  echo "✓ next.json exists"
+  echo "✓ lists.csv exists"
 fi
 
-# lists.json
-if [ ! -f "$DATA_DIR/lists.json" ]; then
-  echo "📝 Creating lists.json with schema..."
-  cat > "$DATA_DIR/lists.json" << 'EOF'
-[]
+# list_items.csv
+if [ ! -f "$DATA_DIR/list_items.csv" ]; then
+  echo "📝 Creating list_items.csv with schema..."
+  cat > "$DATA_DIR/list_items.csv" << 'EOF'
+id,listId,text,completed,createdAt,position
 EOF
-  echo "✅ Created lists.json"
+  echo "✅ Created list_items.csv"
 else
-  echo "✓ lists.json exists"
+  echo "✓ list_items.csv exists"
+fi
+
+# diary_entries.csv
+if [ ! -f "$DATA_DIR/diary_entries.csv" ]; then
+  echo "📝 Creating diary_entries.csv with schema..."
+  cat > "$DATA_DIR/diary_entries.csv" << 'EOF'
+id,date,questionId,answer,createdAt
+EOF
+  echo "✅ Created diary_entries.csv"
+else
+  echo "✓ diary_entries.csv exists"
 fi
 
 echo ""

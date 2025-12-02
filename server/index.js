@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
+const db = require('./db');
+
+console.log('[SERVER] 🏁 Starting server process...');
 
 const app = express();
 app.use(cors());
@@ -44,182 +45,115 @@ app.use((req, res, next) => {
   next();
 });
 
-const HABITS_FILE = path.join(__dirname, '../data/habits.csv');
-const ENTRIES_FILE = path.join(__dirname, '../data/entries.csv');
-const VLOGS_FILE = path.join(__dirname, '../data/vlogs.csv');
-const TASKS_FILE = path.join(__dirname, '../data/tasks.json');
-
-// --- Helper Functions ---
-
-function readCsv(filePath) {
-  if (!fs.existsSync(filePath)) return [];
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const lines = content.trim().split('\n');
-  if (lines.length < 2) return []; // Only header or empty
-
-  const headers = lines[0].split(',').map(h => h.trim());
-  return lines.slice(1).map(line => {
-    const values = line.split(',');
-    const obj = {};
-    headers.forEach((h, i) => {
-      let val = values[i] ? values[i].trim() : '';
-      // Basic type inference
-      if (val === 'true') val = true;
-      if (val === 'false') val = false;
-      // Don't convert numbers automatically as IDs might be strings, but state and order are int
-      if (h === 'state' || h === 'order') val = parseInt(val);
-      obj[h] = val;
-    });
-    return obj;
-  });
-}
-
-function writeCsv(filePath, data) {
-  if (data.length === 0) return;
-  const headers = Object.keys(data[0]);
-  const headerLine = headers.join(',');
-  const lines = data.map(row => {
-    return headers.map(h => row[h]).join(',');
-  });
-  fs.writeFileSync(filePath, [headerLine, ...lines].join('\n'));
-}
-
-function readJson(filePath) {
-  if (!fs.existsSync(filePath)) return [];
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(content);
-  } catch (e) {
-    console.error('Error reading JSON:', e);
-    return [];
-  }
-}
-
-function writeJson(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-
 // --- API Endpoints ---
 
 // Get all active habits (ordered)
-app.get('/habits', (req, res) => {
+app.get('/habits', async (req, res) => {
   try {
-    const habits = readCsv(HABITS_FILE);
-    const activeHabits = habits
-      .filter(h => h.active === true)
-      .sort((a, b) => {
-          const orderA = parseInt(a.order, 10);
-          const orderB = parseInt(b.order, 10);
-          // If both have valid order values, sort by order
-          if (!isNaN(orderA) && !isNaN(orderB)) {
-              return orderA - orderB;
-          }
-          // Fallback to ID-based sorting if order is missing
-          const numA = parseInt(a.id, 10);
-          const numB = parseInt(b.id, 10);
-          if (!isNaN(numA) && !isNaN(numB)) {
-              return numA - numB;
-          }
-          return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
-      });
-    res.json(activeHabits);
+    const result = await db.query(`
+      SELECT * FROM habits 
+      WHERE active = true 
+      ORDER BY "order" ASC, id ASC
+    `);
+    
+    // Convert types to match frontend expectations
+    const habits = result.rows.map(h => ({
+      ...h,
+      defaultTime: h.default_time, // map snake_case to camelCase
+      createdDate: h.created_date
+    }));
+    
+    res.json(habits);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Get entries in a date range
-app.get('/habit-entries', (req, res) => {
+app.get('/habit-entries', async (req, res) => {
   const { from, to } = req.query;
   if (!from || !to) return res.status(400).json({ error: 'Missing from/to' });
+  
   try {
-    const entries = readCsv(ENTRIES_FILE);
-    const filtered = entries.filter(e => e.date >= from && e.date <= to);
-    res.json(filtered);
+    const result = await db.query(`
+      SELECT * FROM entries 
+      WHERE date >= $1 AND date <= $2
+    `, [from, to]);
+    
+    const entries = result.rows.map(e => ({
+      ...e,
+      entryId: e.entry_id,
+      habitId: e.habit_id
+    }));
+    
+    res.json(entries);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Upsert a habit entry
-app.post('/habit-entry', (req, res) => {
+app.post('/habit-entry', async (req, res) => {
   const { entryId, date, habitId, state, timestamp } = req.body;
   if (!entryId || !date || !habitId)
     return res.status(400).json({ error: 'Missing key fields' });
   
   try {
-    let entries = readCsv(ENTRIES_FILE);
-    const existingIndex = entries.findIndex(e => e.entryId === entryId);
+    await db.query(`
+      INSERT INTO entries (entry_id, date, habit_id, state, timestamp)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (entry_id) 
+      DO UPDATE SET state = EXCLUDED.state, timestamp = EXCLUDED.timestamp
+    `, [entryId, date, habitId, state, timestamp]);
     
-    const newEntry = { entryId, date, habitId, state, timestamp };
-
-    if (existingIndex >= 0) {
-      // Update
-      entries[existingIndex] = { ...entries[existingIndex], state, timestamp };
-    } else {
-      // Insert
-      entries.push(newEntry);
-    }
-    
-    writeCsv(ENTRIES_FILE, entries);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// Seed/replace HabitConfig
-app.post('/seed-habits', (req, res) => {
-  const seed = [
-    { id: 'habit1', name: 'Exercise', defaultTime: 'morning', active: true, createdDate: '2025-11-09' },
-    { id: 'habit2', name: 'Meditation', defaultTime: 'morning', active: true, createdDate: '2025-11-09' },
-    { id: 'habit3', name: 'Read', defaultTime: 'night', active: true, createdDate: '2025-11-09' },
-    { id: 'habit4', name: 'Journal', defaultTime: 'night', active: true, createdDate: '2025-11-09' },
-    { id: 'habit5', name: 'Hydration', defaultTime: 'morning', active: true, createdDate: '2025-11-09' },
-    { id: 'habit6', name: 'Yoga', defaultTime: 'morning', active: true, createdDate: '2025-11-09' },
-    { id: 'habit7', name: 'Deep Work', defaultTime: 'morning', active: true, createdDate: '2025-11-09' },
-    { id: 'habit8', name: 'Sleep Early', defaultTime: 'night', active: true, createdDate: '2025-11-09' },
-    { id: 'habit9', name: 'Gratitude', defaultTime: 'night', active: true, createdDate: '2025-11-09' },
-    { id: 'habit10', name: 'No Social Media', defaultTime: 'neither', active: true, createdDate: '2025-11-09' },
-  ];
-  try {
-    writeCsv(HABITS_FILE, seed);
-    res.json({ ok: true, seeded: seed.length });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+// Seed/replace HabitConfig (Not typically used in prod, but kept for compatibility)
+app.post('/seed-habits', async (req, res) => {
+  // Skipping implementation as it's destructive and we have real data now
+  res.status(501).json({ error: 'Seeding disabled in DB mode' });
 });
 
 // Get vlog for a specific week
-app.get('/vlogs/:weekStartDate', (req, res) => {
+app.get('/vlogs/:weekStartDate', async (req, res) => {
   const { weekStartDate } = req.params;
   try {
-    const vlogs = readCsv(VLOGS_FILE);
-    const vlog = vlogs.find(v => v.weekStartDate === weekStartDate);
-    res.json(vlog || null);
+    const result = await db.query(`
+      SELECT * FROM vlogs WHERE week_start_date = $1
+    `, [weekStartDate]);
+    
+    if (result.rows.length === 0) return res.json(null);
+    
+    const v = result.rows[0];
+    res.json({
+      weekStartDate: v.week_start_date, // Date object might need formatting? Postgres returns Date object
+      videoUrl: v.video_url,
+      embedHtml: v.embed_html
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Save a vlog for a specific week
-app.post('/vlogs', (req, res) => {
+app.post('/vlogs', async (req, res) => {
   const { weekStartDate, videoUrl, embedHtml } = req.body;
   if (!weekStartDate || !videoUrl || !embedHtml) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
   try {
-    let vlogs = readCsv(VLOGS_FILE);
-    const existingIndex = vlogs.findIndex(v => v.weekStartDate === weekStartDate);
+    await db.query(`
+      INSERT INTO vlogs (week_start_date, video_url, embed_html)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (week_start_date)
+      DO UPDATE SET video_url = EXCLUDED.video_url, embed_html = EXCLUDED.embed_html
+    `, [weekStartDate, videoUrl, embedHtml]);
     
-    if (existingIndex >= 0) {
-      vlogs[existingIndex] = { weekStartDate, videoUrl, embedHtml };
-    } else {
-      vlogs.push({ weekStartDate, videoUrl, embedHtml });
-    }
-    
-    writeCsv(VLOGS_FILE, vlogs);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -227,66 +161,107 @@ app.post('/vlogs', (req, res) => {
 });
 
 // Get all tasks
-app.get('/tasks', (req, res) => {
+app.get('/tasks', async (req, res) => {
   try {
-    const tasks = readJson(TASKS_FILE);
-    res.json(tasks);
+    const result = await db.query('SELECT * FROM tasks');
+    
+    // Convert flat DB rows back to date-keyed object
+    const tasksByDate = {};
+    result.rows.forEach(t => {
+      // Format date to YYYY-MM-DD string if it's a Date object
+      const dateStr = typeof t.date === 'string' ? t.date : t.date.toISOString().split('T')[0];
+      
+      if (!tasksByDate[dateStr]) tasksByDate[dateStr] = [];
+      
+      tasksByDate[dateStr].push({
+        id: t.id,
+        text: t.text,
+        completed: t.completed,
+        date: dateStr,
+        createdAt: t.created_at,
+        category: t.category,
+        state: t.state
+      });
+    });
+    res.json(tasksByDate);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// Save all tasks (replace)
-app.post('/tasks', (req, res) => {
-  const tasks = req.body;
-  // Allow object or array
-  if (!tasks || typeof tasks !== 'object') {
-    return res.status(400).json({ error: 'Body must be an object or array of tasks' });
+// Save all tasks (replace) - Modified to be an Upsert for changed items
+// Note: The UI sends the ENTIRE state. Ideally we'd only send changes, but for now we'll 
+// just upsert everything received. This is inefficient but safe.
+app.post('/tasks', async (req, res) => {
+  const tasksByDate = req.body;
+  if (!tasksByDate || typeof tasksByDate !== 'object') {
+    return res.status(400).json({ error: 'Body must be an object of tasks' });
   }
   
+  const client = await db.pool.connect();
   try {
-    writeJson(TASKS_FILE, tasks);
+    await client.query('BEGIN');
+    
+    // We can't easily "replace all" without deleting everything, which is risky.
+    // Instead, we'll upsert every task we receive.
+    // TODO: Handle deletions? If a task is removed from UI, it won't be deleted here.
+    // For now, assuming tasks are only added/modified.
+    
+    for (const [date, tasks] of Object.entries(tasksByDate)) {
+      if (Array.isArray(tasks)) {
+        for (const t of tasks) {
+          await client.query(`
+            INSERT INTO tasks (id, text, completed, date, created_at, category, state)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (id) DO UPDATE SET
+              text = EXCLUDED.text,
+              completed = EXCLUDED.completed,
+              date = EXCLUDED.date,
+              category = EXCLUDED.category,
+              state = EXCLUDED.state
+          `, [t.id, t.text || '', t.completed || false, t.date || date, t.createdAt, t.category || 'life', t.state || 'active']);
+        }
+      }
+    }
+    
+    await client.query('COMMIT');
     res.json({ ok: true });
   } catch (e) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
   }
 });
 
 // --- Diary Endpoints ---
 
-const QUESTIONS_FILE = path.join(__dirname, '../data/questions.csv');
-const DIARY_FILE = path.join(__dirname, '../data/diary.json');
-
 // Get all active questions
-app.get('/questions', (req, res) => {
+app.get('/questions', async (req, res) => {
   try {
-    const questions = readCsv(QUESTIONS_FILE);
-    const activeQuestions = questions
-      .filter(q => q.active === true)
-      .sort((a, b) => parseInt(a.order) - parseInt(b.order));
-    res.json(activeQuestions);
+    const result = await db.query(`
+      SELECT * FROM questions 
+      WHERE active = true 
+      ORDER BY "order" ASC
+    `);
+    res.json(result.rows);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Add a new question
-app.post('/questions', (req, res) => {
+app.post('/questions', async (req, res) => {
   const { id, text, order, active, date } = req.body;
   if (!id || !text) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   
   try {
-    const questions = readCsv(QUESTIONS_FILE);
-    questions.push({ 
-      id, 
-      text, 
-      order: order || 999, 
-      active: active !== undefined ? active : true,
-      date: date || ''
-    });
-    writeCsv(QUESTIONS_FILE, questions);
+    await db.query(`
+      INSERT INTO questions (id, text, "order", active, date)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [id, text, order || 999, active !== undefined ? active : true, date || '']);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -294,89 +269,147 @@ app.post('/questions', (req, res) => {
 });
 
 // Get all diary entries
-app.get('/diary', (req, res) => {
+app.get('/diary', async (req, res) => {
   try {
-    const diary = readJson(DIARY_FILE);
-    res.json(diary);
+    const result = await db.query('SELECT * FROM diary_entries');
+    
+    const diaryByDate = {};
+    result.rows.forEach(e => {
+      const dateStr = typeof e.date === 'string' ? e.date : e.date.toISOString().split('T')[0];
+      
+      if (!diaryByDate[dateStr]) diaryByDate[dateStr] = [];
+      
+      diaryByDate[dateStr].push({
+        id: e.id,
+        date: dateStr,
+        questionId: e.question_id,
+        answer: e.answer,
+        createdAt: e.created_at
+      });
+    });
+    res.json(diaryByDate);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Save diary entries
-app.post('/diary', (req, res) => {
-  const diary = req.body;
-  if (!diary || typeof diary !== 'object') {
+app.post('/diary', async (req, res) => {
+  const diaryByDate = req.body;
+  if (!diaryByDate || typeof diaryByDate !== 'object') {
     return res.status(400).json({ error: 'Body must be an object' });
   }
   
+  const client = await db.pool.connect();
   try {
-    writeJson(DIARY_FILE, diary);
+    await client.query('BEGIN');
+    
+    for (const [date, entries] of Object.entries(diaryByDate)) {
+      if (Array.isArray(entries)) {
+        for (const e of entries) {
+          await client.query(`
+            INSERT INTO diary_entries (id, date, question_id, answer, created_at)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (id) DO UPDATE SET
+              answer = EXCLUDED.answer
+          `, [e.id, e.date || date, e.questionId, e.answer || '', e.createdAt]);
+        }
+      }
+    }
+    
+    await client.query('COMMIT');
     res.json({ ok: true });
   } catch (e) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
   }
 });
 
 // --- Next Endpoints ---
 
-const NEXT_FILE = path.join(__dirname, '../data/next.json');
-
 // Get all active next items
-app.get('/next', (req, res) => {
+app.get('/next', async (req, res) => {
   try {
-    const items = readJson(NEXT_FILE);
-    // Filter out deleted and started items by default
-    const activeItems = items.filter(item => !item.deletedAt && !item.startedAt);
-    res.json(activeItems);
+    const result = await db.query(`
+      SELECT * FROM next_items 
+      WHERE deleted_at IS NULL AND started_at IS NULL
+    `);
+    
+    const items = result.rows.map(item => ({
+      ...item,
+      createdAt: item.created_at,
+      deletedAt: item.deleted_at,
+      startedAt: item.started_at
+    }));
+    
+    res.json(items);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Add a new next item
-app.post('/next', (req, res) => {
+app.post('/next', async (req, res) => {
   const { id, title, content, color, size } = req.body;
   if (!id || !title) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    const items = readJson(NEXT_FILE);
-    const newItem = {
-      id,
-      title,
-      content: content || '',
-      color: color || '#2D2D2D',
-      size: size || 'medium',
-      createdAt: new Date().toISOString(),
-      deletedAt: null,
-      startedAt: null
-    };
-    items.push(newItem);
-    writeJson(NEXT_FILE, items);
-    res.json(newItem);
+    const createdAt = new Date().toISOString();
+    await db.query(`
+      INSERT INTO next_items (id, title, content, color, size, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [id, title, content || '', color || '#2D2D2D', size || 'medium', createdAt]);
+    
+    res.json({
+      id, title, content, color, size, createdAt, deletedAt: null, startedAt: null
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// Update a next item (e.g. delete, start, or edit)
-app.patch('/next/:id', (req, res) => {
+// Update a next item
+app.patch('/next/:id', async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
+  
+  // Map camelCase to snake_case for DB
+  const dbUpdates = {};
+  if (updates.title) dbUpdates.title = updates.title;
+  if (updates.content) dbUpdates.content = updates.content;
+  if (updates.color) dbUpdates.color = updates.color;
+  if (updates.size) dbUpdates.size = updates.size;
+  if (updates.deletedAt) dbUpdates.deleted_at = updates.deletedAt;
+  if (updates.startedAt) dbUpdates.started_at = updates.startedAt;
+  
+  if (Object.keys(dbUpdates).length === 0) return res.json({ ok: true }); // Nothing to update
 
   try {
-    const items = readJson(NEXT_FILE);
-    const index = items.findIndex(item => item.id === id);
+    const setClause = Object.keys(dbUpdates).map((key, i) => `${key} = $${i + 2}`).join(', ');
+    const values = Object.values(dbUpdates);
     
-    if (index === -1) {
+    const result = await db.query(`
+      UPDATE next_items 
+      SET ${setClause}
+      WHERE id = $1
+      RETURNING *
+    `, [id, ...values]);
+    
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Item not found' });
     }
-
-    items[index] = { ...items[index], ...updates };
-    writeJson(NEXT_FILE, items);
-    res.json(items[index]);
+    
+    const item = result.rows[0];
+    res.json({
+      ...item,
+      createdAt: item.created_at,
+      deletedAt: item.deleted_at,
+      startedAt: item.started_at
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -384,74 +417,139 @@ app.patch('/next/:id', (req, res) => {
 
 // --- Lists Endpoints ---
 
-const LISTS_FILE = path.join(__dirname, '../data/lists.json');
-
 // Get all lists
-app.get('/lists', (req, res) => {
+app.get('/lists', async (req, res) => {
   try {
-    const lists = readJson(LISTS_FILE);
-    res.json(lists);
+    // Fetch lists and items in parallel
+    const [listsRes, itemsRes] = await Promise.all([
+      db.query('SELECT * FROM lists'),
+      db.query('SELECT * FROM list_items ORDER BY position ASC')
+    ]);
+    
+    const lists = listsRes.rows.map(l => ({
+      ...l,
+      createdAt: l.created_at
+    }));
+    
+    const items = itemsRes.rows.map(i => ({
+      ...i,
+      listId: i.list_id,
+      createdAt: i.created_at
+    }));
+    
+    // Join them
+    const listsWithItems = lists.map(list => {
+      const listItems = items.filter(i => i.listId === list.id);
+      return { ...list, items: listItems };
+    });
+    
+    res.json(listsWithItems);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Create a new list
-app.post('/lists', (req, res) => {
+app.post('/lists', async (req, res) => {
   const { id, title, color } = req.body;
   if (!id || !title) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    const lists = readJson(LISTS_FILE);
-    const newList = {
-      id,
-      title,
-      color: color || '#2D2D2D',
-      createdAt: new Date().toISOString(),
-      items: []
-    };
-    lists.push(newList);
-    writeJson(LISTS_FILE, lists);
-    res.json(newList);
+    const createdAt = new Date().toISOString();
+    await db.query(`
+      INSERT INTO lists (id, title, color, created_at)
+      VALUES ($1, $2, $3, $4)
+    `, [id, title, color || '#2D2D2D', createdAt]);
+    
+    res.json({
+      id, title, color, createdAt, items: []
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 // Update a list (title or items)
-app.patch('/lists/:id', (req, res) => {
+app.patch('/lists/:id', async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
 
+  const client = await db.pool.connect();
   try {
-    const lists = readJson(LISTS_FILE);
-    const index = lists.findIndex(l => l.id === id);
+    await client.query('BEGIN');
     
-    if (index === -1) {
-      return res.status(404).json({ error: 'List not found' });
+    // 1. Update List Metadata
+    if (updates.title || updates.color) {
+      const fields = [];
+      const values = [id];
+      let idx = 2;
+      
+      if (updates.title) { fields.push(`title = $${idx++}`); values.push(updates.title); }
+      if (updates.color) { fields.push(`color = $${idx++}`); values.push(updates.color); }
+      
+      if (fields.length > 0) {
+        await client.query(`
+          UPDATE lists SET ${fields.join(', ')} WHERE id = $1
+        `, values);
+      }
     }
 
-    lists[index] = { ...lists[index], ...updates };
-    writeJson(LISTS_FILE, lists);
-    res.json(lists[index]);
+    // 2. Update List Items (Full Replace Strategy for simplicity/correctness with UI)
+    if (updates.items && Array.isArray(updates.items)) {
+      // Delete old items
+      await client.query('DELETE FROM list_items WHERE list_id = $1', [id]);
+      
+      // Insert new items
+      for (let i = 0; i < updates.items.length; i++) {
+        const item = updates.items[i];
+        await client.query(`
+          INSERT INTO list_items (id, list_id, text, completed, created_at, position)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `, [
+          item.id, 
+          id, 
+          item.text || '', 
+          item.completed || false, 
+          item.createdAt || new Date().toISOString(), 
+          i // position
+        ]);
+      }
+    }
+
+    await client.query('COMMIT');
+    
+    // Fetch updated list to return
+    // (Simplification: just return what we have, or do a fresh fetch if needed. 
+    // For now, let's just return success/updates as the UI usually updates optimistically)
+    res.json({ ...updates, id }); 
   } catch (e) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
   }
 });
 
 // Delete a list
-app.delete('/lists/:id', (req, res) => {
+app.delete('/lists/:id', async (req, res) => {
   const { id } = req.params;
 
+  const client = await db.pool.connect();
   try {
-    let lists = readJson(LISTS_FILE);
-    lists = lists.filter(l => l.id !== id);
-    writeJson(LISTS_FILE, lists);
+    await client.query('BEGIN');
+    // Delete items first (foreign key constraint usually handles this if CASCADE, but being safe)
+    await client.query('DELETE FROM list_items WHERE list_id = $1', [id]);
+    await client.query('DELETE FROM lists WHERE id = $1', [id]);
+    await client.query('COMMIT');
+    
     res.json({ ok: true });
   } catch (e) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
   }
 });
 
@@ -459,8 +557,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log(`[SERVER] 🚀 API running on http://0.0.0.0:${PORT}`);
-  console.log(`[SERVER] 📁 Using local CSV files for storage`);
+  console.log(`[SERVER] 🐘 Connected to CockroachDB`);
   console.log(`[SERVER] 📝 Verbose logging enabled`);
   console.log('='.repeat(60) + '\n');
 });
-

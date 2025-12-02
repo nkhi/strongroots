@@ -7,7 +7,7 @@ import { Diary } from './components/Diary';
 import { Next } from './components/Next';
 import { Lists } from './components/Lists';
 
-const API_BASE_URL = 'http://0.0.0.0:3000';
+const API_BASE_URL = 'http://localhost:3000';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'habits' | 'todos' | 'logs' | 'memos' | 'next' | 'lists'>('habits');
@@ -95,7 +95,7 @@ function App() {
           <div className="memos-container">
             <div className="memos-loading-overlay" />
             <iframe
-              src="http://0.0.0.0:5230/"
+              src="http://localhost:5230/"
               className="memos-frame"
               title="Memos"
             />

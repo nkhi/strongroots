@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Initialize data files if they don't exist
-./scripts/init-data.sh
+# ./scripts/init-data.sh
 
 # Function to cleanup background processes
 cleanup() {
@@ -26,11 +26,11 @@ cd ..
 cd client
 
 # Open browser after a short delay (in background so it doesn't block)
-(sleep 2 && open http://0.0.0.0:5173/) &
+(sleep 2 && open http://localhost:5173/) &
 
 # Start Vite dev server in foreground (this will show all output)
 echo "Starting Vite dev server..."
-pnpm run dev --host 0.0.0.0
+pnpm run dev --host localhost
 
 # When Vite stops (Ctrl+C), cleanup will kill the server
 cleanup

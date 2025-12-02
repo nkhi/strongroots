@@ -4,7 +4,7 @@ import type { Habit, HabitEntry, Vlog } from '../types';
 import { DateUtility, getGrade, generateId } from '../utils';
 import VlogModal from './VlogModal';
 import ChartModal from './ChartModal';
-import { VideoCameraIcon, SunHorizonIcon, MoonIcon, HeartIcon, TreeIcon, BarbellIcon, ResizeIcon, ChartLineUpIcon, PresentationIcon, PresentationChartIcon } from '@phosphor-icons/react';
+import { VideoCameraIcon, SunHorizonIcon, MoonIcon, HeartIcon, TreeIcon, BarbellIcon, ResizeIcon, PresentationChartIcon } from '@phosphor-icons/react';
 
 const CONFIG = {
   startDate: new Date('2025-11-09T00:00:00'),
@@ -24,6 +24,7 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
   const [viewingVlog, setViewingVlog] = useState<Vlog | null>(null);
   const [showChart, setShowChart] = useState(false);
   const [loomSupported, setLoomSupported] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const api = useRef(new HabitAPI(apiBaseUrl)).current;
   const loomButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -108,7 +109,13 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
         CONFIG.startDate = new Date(earliest);
       }
       const allDates = DateUtility.getAllDatesFromStart(CONFIG.startDate);
-      setDates(allDates);
+      
+      // Create a completely new array with new Date objects to ensure React detects the change
+      const datesCopy = allDates.map(d => new Date(d));
+      
+      // Set dates and loading state
+      setDates(datesCopy);
+      setIsLoading(false);
 
       // Expand current week by default
       const today = new Date();
@@ -154,36 +161,26 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
       sdkButtonRef.current = sdkButton;
 
       sdkButton.on('insert-click', async (video) => {
-        console.log('Loom insert-click event triggered!', video);
-        console.log('Current recordingWeek:', recordingWeekRef.current);
-
         if (!recordingWeekRef.current) {
           console.error('No recordingWeek set when insert-click fired');
           return;
         }
 
         try {
-          console.log('Fetching oembed for:', video.sharedUrl);
           const { html } = await oembed(video.sharedUrl, { width: 600 });
-          console.log('Got embed HTML, saving vlog...');
           await handleVlogSaved(recordingWeekRef.current, video.sharedUrl, html);
-          console.log('Vlog saved successfully!');
         } catch (err) {
           console.error('Failed to save vlog:', err);
         }
       });
 
       sdkButton.on('cancel', () => {
-        console.log('Loom recording cancelled');
         recordingWeekRef.current = null;
       });
 
       sdkButton.on('complete', () => {
-        console.log('Loom recording completed');
         recordingWeekRef.current = null;
       });
-
-      console.log('Loom SDK initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Loom:', error);
       setLoomSupported(false);
@@ -192,6 +189,7 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
 
   async function loadData() {
     try {
+      setIsLoading(true);
       const [habitsData, entriesData] = await Promise.all([
         api.getHabits(),
         api.getEntries(
@@ -204,8 +202,18 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
 
       const entriesMap = new Map<string, HabitEntry>();
       entriesData.forEach(entry => {
-        const key = `${entry.date}_${entry.habitId}`;
-        entriesMap.set(key, { ...entry, state: parseInt(String(entry.state)) });
+        // API may return habit_id or habitId, normalize to habitId
+        const normalizedHabitId = entry.habitId || (entry as any).habit_id;
+        // Normalize date format - entry.date might be ISO string, convert to YYYY-MM-DD format
+        const entryDate = new Date(entry.date);
+        const normalizedDate = DateUtility.formatDate(entryDate);
+        const key = `${normalizedDate}_${normalizedHabitId}`;
+        entriesMap.set(key, { 
+          ...entry, 
+          date: normalizedDate, // Store normalized date format
+          habitId: normalizedHabitId, 
+          state: parseInt(String(entry.state)) 
+        });
       });
       setEntries(entriesMap);
 
@@ -213,6 +221,7 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
       await loadVlogs(DateUtility.getAllDatesFromStart(CONFIG.startDate));
     } catch (error) {
       console.error('Failed to load data:', error);
+      setIsLoading(false);
     }
   }
 
@@ -372,7 +381,6 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
     } else {
       // Start recording
       recordingWeekRef.current = weekStart;
-      console.log('Set recordingWeekRef to:', weekStart);
       if (loomButtonRef.current) {
         loomButtonRef.current.click();
       }
@@ -387,6 +395,14 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
       newExpanded.add(weekKey);
     }
     setExpandedWeeks(newExpanded);
+  }
+
+  if (isLoading || habits.length === 0 || dates.length === 0) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <p>Loading habits data...</p>
+      </div>
+    );
   }
 
   return (
