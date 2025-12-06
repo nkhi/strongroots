@@ -7,7 +7,10 @@
 cleanup() {
   echo -e "\n\n[SHUTDOWN] Stopping server..."
   if [ ! -z "$SERVER_PID" ]; then
+    # Kill the loop process
     kill $SERVER_PID 2>/dev/null
+    # Kill any child processes (the actual node server)
+    pkill -P $SERVER_PID 2>/dev/null
   fi
   exit 0
 }
@@ -18,7 +21,15 @@ trap cleanup SIGINT SIGTERM
 # Start the server in the background with output visible
 echo "Starting server..."
 cd server
-node index.js &
+# Run in a loop to auto-restart on crash
+(
+  while true; do
+    echo "[SERVER] 🚀 Starting Node.js server..."
+    node index.js
+    echo "[SERVER] 💥 Server crashed or stopped. Restarting in 1 second..."
+    sleep 1
+  done
+) &
 SERVER_PID=$!
 
 # Go back to root and start the client

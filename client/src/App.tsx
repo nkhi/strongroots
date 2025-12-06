@@ -6,6 +6,7 @@ import { Todos } from './components/Todos';
 import { Diary } from './components/Diary';
 import { Next } from './components/Next';
 import { Lists } from './components/Lists';
+import { ServerStatus } from './components/ServerStatus';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -75,7 +76,10 @@ function App() {
 
         </div>
 
+
+
         <div className="right-links">
+          <ServerStatus apiBaseUrl={API_BASE_URL} />
           <a href="cron://" className="nav-link">
             <Calendar size={20} weight="duotone" className="nav-icon" />
             {/* <span className="nav-text">Calendar</span> */}

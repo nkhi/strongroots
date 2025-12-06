@@ -9,50 +9,46 @@ app.use(cors());
 app.use(express.json());
 
 // Comprehensive logging middleware
+// Concise logging middleware
 app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(`\n[SERVER] ${timestamp}`);
-  console.log(`[SERVER] → ${req.method} ${req.path}`);
-  
-  if (Object.keys(req.query).length > 0) {
-    console.log(`[SERVER]   Query:`, req.query);
-  }
-  
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log(`[SERVER]   Body: ${Object.keys(req.body).length}`, (() => {
-      const bodyString = JSON.stringify(req.body, null, 2);
-      const lines = bodyString.split('\n');
-      if (lines.length > 4) {
-        return lines.slice(0, 4).join('\n') + '\n    ... (body truncated)';
-      }
-      return bodyString;
-    })());
+  // Skip logging for health checks to keep console clean
+  if (req.path === '/health') {
+    return next();
   }
 
-  // Capture the original send and json functions
-  const originalSend = res.send;
-  const originalJson = res.json;
+  const start = Date.now();
   
-  res.send = function(data) {
-    console.log(`[SERVER] ← ${res.statusCode} ${req.method} ${req.path}`);
-    if (res.statusCode >= 400) {
-      console.log(`[SERVER]   Error Response:`, data);
-    }
-    return originalSend.call(this, data);
-  };
+  // Capture original end to handle response body if needed (optional, but good for errors)
+  // For now, we'll just stick to the 'finish' event for the main log line
   
-  res.json = function(data) {
-    console.log(`[SERVER] ← ${res.statusCode} ${req.method} ${req.path}`);
-    if (res.statusCode >= 400) {
-      console.log(`[SERVER]   Error Response:`, data);
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const timestamp = new Date().toISOString();
+    const status = res.statusCode;
+    
+    // Colorize status
+    let statusLog = status;
+    // Simple visual indicator for status
+    const statusIcon = status >= 500 ? '🔥' : status >= 400 ? '⚠️' : '✅';
+    
+    let extraInfo = '';
+    if (Object.keys(req.query).length > 0) {
+      extraInfo += ` | Q: ${JSON.stringify(req.query)}`;
     }
-    return originalJson.call(this, data);
-  };
+    
+    // Log the single line
+    console.log(`[SERVER] ${timestamp} | ${statusIcon} ${status} | ${duration.toString().padStart(4)}ms | ${req.method.padEnd(6)} ${req.path}${extraInfo}`);
+  });
 
   next();
 });
 
 // --- API Endpoints ---
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Get all active habits (ordered)
 app.get('/habits', async (req, res) => {
