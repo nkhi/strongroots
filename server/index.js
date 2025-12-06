@@ -19,7 +19,14 @@ app.use((req, res, next) => {
   }
   
   if (req.body && Object.keys(req.body).length > 0) {
-    console.log(`[SERVER]   Body:`, JSON.stringify(req.body, null, 2));
+    console.log(`[SERVER]   Body: ${Object.keys(req.body).length}`, (() => {
+      const bodyString = JSON.stringify(req.body, null, 2);
+      const lines = bodyString.split('\n');
+      if (lines.length > 4) {
+        return lines.slice(0, 4).join('\n') + '\n    ... (body truncated)';
+      }
+      return bodyString;
+    })());
   }
 
   // Capture the original send and json functions
@@ -228,6 +235,42 @@ app.post('/tasks', async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     await client.query('ROLLBACK');
+    res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
+  }
+});
+
+// Update a single task by ID
+app.put('/tasks/:id', async (req, res) => {
+  const taskId = req.params.id;
+  const task = req.body;
+  
+  if (!task || typeof task !== 'object') {
+    return res.status(400).json({ error: 'Body must be a task object' });
+  }
+  
+  const client = await db.pool.connect();
+  try {
+    await client.query(`
+      UPDATE tasks 
+      SET text = $1,
+          completed = $2,
+          date = $3,
+          category = $4,
+          state = $5
+      WHERE id = $6
+    `, [
+      task.text || '',
+      task.completed || false,
+      task.date || '',
+      task.category || 'life',
+      task.state || 'active',
+      taskId
+    ]);
+    
+    res.json({ ok: true });
+  } catch (e) {
     res.status(500).json({ error: e.message });
   } finally {
     client.release();

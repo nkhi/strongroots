@@ -13,9 +13,15 @@ export function Todos({ apiBaseUrl }: TodosProps) {
   const [tasks, setTasks] = useState<Record<string, Task[]>>({});
   const [newTaskTexts, setNewTaskTexts] = useState<Record<string, string>>({});
   const api = useRef(new HabitAPI(apiBaseUrl)).current;
+  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
     loadTasks();
+    
+    return () => {
+      // Cleanup debounce timers on unmount
+      Object.values(debounceTimers.current).forEach(timer => clearTimeout(timer));
+    };
   }, []);
 
   async function loadTasks() {
@@ -59,31 +65,47 @@ export function Todos({ apiBaseUrl }: TodosProps) {
     await api.saveTasks(updatedTasks);
   }
 
-  async function toggleTask(dateStr: string, taskId: string) {
+  function toggleTask(dateStr: string, taskId: string) {
     const currentDayTasks = tasks[dateStr] || [];
-    const updatedDayTasks = currentDayTasks.map(t => {
-      if (t.id !== taskId) return t;
-      
-      const currentState = t.state || (t.completed ? 'completed' : 'active');
-      let newState: 'active' | 'completed' | 'failed';
-      
-      if (currentState === 'active') {
-        newState = 'completed';
-      } else {
-        // If completed or failed, go back to active
-        newState = 'active';
-      }
-      
-      return { 
-        ...t, 
-        completed: newState === 'completed',
-        state: newState 
-      };
-    });
+    const currentTask = currentDayTasks.find(t => t.id === taskId);
+    if (!currentTask) return;
+    
+    const currentState = currentTask.state || (currentTask.completed ? 'completed' : 'active');
+    let newState: 'active' | 'completed' | 'failed';
+    
+    // Cycle through: active -> completed -> failed -> active
+    if (currentState === 'active') {
+      newState = 'completed';
+    } else if (currentState === 'completed') {
+      newState = 'failed';
+    } else {
+      newState = 'active';
+    }
+    
+    const updatedTask = { 
+      ...currentTask, 
+      completed: newState === 'completed',
+      state: newState 
+    };
+    
+    const updatedDayTasks = currentDayTasks.map(t => 
+      t.id === taskId ? updatedTask : t
+    );
     const updatedTasks = { ...tasks, [dateStr]: updatedDayTasks };
     
+    // Update UI immediately
     setTasks(updatedTasks);
-    await api.saveTasks(updatedTasks);
+    
+    // Debounce API save - update only this single task
+    const debounceKey = `${dateStr}_${taskId}`;
+    if (debounceTimers.current[debounceKey]) {
+      clearTimeout(debounceTimers.current[debounceKey]);
+    }
+    
+    debounceTimers.current[debounceKey] = setTimeout(async () => {
+      await api.updateTask(taskId, updatedTask);
+      delete debounceTimers.current[debounceKey];
+    }, 3000);
   }
 
   async function puntTask(dateStr: string, taskId: string) {
@@ -199,11 +221,15 @@ export function Todos({ apiBaseUrl }: TodosProps) {
               {lifeTasks.map(task => {
                 const taskState = task.state || (task.completed ? 'completed' : 'active');
                 return (
-                  <div key={task.id} className={`todo-item ${taskState}`}>
+                  <div
+                    key={task.id}
+                    className={`todo-item ${taskState}`}
+                    onClick={() => toggleTask(dateStr, task.id)}
+                  >
                     <div className="todo-item-content">
                       <button 
+                        type="button"
                         className={`todo-check-btn ${taskState}`}
-                        onClick={() => toggleTask(dateStr, task.id)}
                       >
                         {taskState === 'completed' && <Check size={12} weight="bold" />}
                         {taskState === 'failed' && <X size={12} weight="bold" />}
@@ -213,14 +239,14 @@ export function Todos({ apiBaseUrl }: TodosProps) {
                     <div className="todo-actions">
                       <button 
                         className="todo-clone-btn"
-                        onClick={() => puntTask(dateStr, task.id)}
+                        onClick={(e) => { e.stopPropagation(); puntTask(dateStr, task.id); }}
                         title="Fail & Punt to Next Day"
                       >
                         <ArrowBendDownRight size={14} />
                       </button>
                       <button 
                         className="todo-delete-btn"
-                        onClick={() => deleteTask(dateStr, task.id)}
+                        onClick={(e) => { e.stopPropagation(); deleteTask(dateStr, task.id); }}
                       >
                         <Trash size={14} />
                       </button>
@@ -246,28 +272,33 @@ export function Todos({ apiBaseUrl }: TodosProps) {
               {workTasks.map(task => {
                 const taskState = task.state || (task.completed ? 'completed' : 'active');
                 return (
-                  <div key={task.id} className={`todo-item ${taskState}`}>
+                  <div
+                    key={task.id}
+                    className={`todo-item ${taskState}`}
+                    onClick={() => toggleTask(dateStr, task.id)}
+                  >
                     <div className="todo-item-content">
                       <button 
+                        type="button"
                         className={`todo-check-btn ${taskState}`}
-                        onClick={() => toggleTask(dateStr, task.id)}
                       >
                         {taskState === 'completed' && <Check size={12} weight="bold" />}
                         {taskState === 'failed' && <X size={12} weight="bold" />}
                       </button>
                       <span className="todo-text">{task.text}</span>
                     </div>
+                    
                     <div className="todo-actions">
                       <button 
                         className="todo-clone-btn"
-                        onClick={() => puntTask(dateStr, task.id)}
+                        onClick={(e) => { e.stopPropagation(); puntTask(dateStr, task.id); }}
                         title="Fail & Punt to Next Day"
                       >
                         <ArrowBendDownRight size={14} />
                       </button>
                       <button 
                         className="todo-delete-btn"
-                        onClick={() => deleteTask(dateStr, task.id)}
+                        onClick={(e) => { e.stopPropagation(); deleteTask(dateStr, task.id); }}
                       >
                         <Trash size={14} />
                       </button>

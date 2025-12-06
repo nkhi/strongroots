@@ -82,7 +82,7 @@ export function QuestionView({ apiBaseUrl, onBack }: QuestionViewProps) {
                     </div>
 
                     <div className="diary-content">
-                        {item.entries.map(entry => (
+                        {item.entries.map((entry: any) => (
                             <div key={entry.id} className="diary-card">
                                 <div className="diary-question" style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '8px' }}>
                                     {new Date(entry.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}

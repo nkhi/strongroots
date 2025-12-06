@@ -58,6 +58,15 @@ export class HabitAPI {
     if (!response.ok) throw new Error('Failed to save tasks');
   }
 
+  async updateTask(taskId: string, task: Partial<import('./types').Task>): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/tasks/${taskId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(task)
+    });
+    if (!response.ok) throw new Error('Failed to update task');
+  }
+
   async getQuestions(): Promise<import('./types').Question[]> {
     const response = await fetch(`${this.baseUrl}/questions`);
     if (!response.ok) throw new Error('Failed to fetch questions');

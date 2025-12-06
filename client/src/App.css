@@ -996,21 +996,20 @@ button, input, select, textarea {
 }
 
 .todo-item {
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 0;
+  padding: 0.75rem 0.5rem;
+  border-radius: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
 }
 
 .todo-item:hover {
-  background: rgba(255, 255, 255, 0.02);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  border-radius: 4px;
-  border-bottom-color: transparent;
+  background: #1d1d1d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .todo-item-content {
