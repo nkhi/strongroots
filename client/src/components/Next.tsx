@@ -1,23 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Trash, RocketLaunch } from '@phosphor-icons/react';
 import { CARD_COLORS } from '../constants/colors';
+import { HabitAPI } from '../api';
+import type { Note } from '../types';
 import './Next.css';
 
-interface Note {
-    id: string;
-    title: string;
-    content: string;
-    color: string;
-    size: 'small' | 'medium' | 'large' | 'wide' | 'tall';
-    createdAt: string;
-    deletedAt: string | null;
-    startedAt: string | null;
+interface NextProps {
+    apiBaseUrl: string;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
-
-export const Next: React.FC = () => {
+export const Next: React.FC<NextProps> = ({ apiBaseUrl }) => {
     const [notes, setNotes] = useState<Note[]>([]);
+    const api = useRef(new HabitAPI(apiBaseUrl)).current;
 
     useEffect(() => {
         fetchNotes();
@@ -25,8 +19,7 @@ export const Next: React.FC = () => {
 
     const fetchNotes = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/next`);
-            const data = await res.json();
+            const data = await api.getNotes();
             setNotes(data);
         } catch (error) {
             console.error('Error fetching notes:', error);
@@ -38,11 +31,7 @@ export const Next: React.FC = () => {
         setNotes(prev => prev.map(n => n.id === id ? { ...n, ...updates } : n));
 
         try {
-            await fetch(`${API_BASE_URL}/next/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
+            await api.updateNote(id, updates);
         } catch (error) {
             console.error('Error updating note:', error);
             // Revert on failure (could be improved)
@@ -68,7 +57,7 @@ export const Next: React.FC = () => {
 
         const randomColor = CARD_COLORS[Math.floor(Math.random() * CARD_COLORS.length)];
 
-        const newNote = {
+        const newNote: Partial<Note> = {
             id: crypto.randomUUID(),
             title: 'New Idea',
             content: 'Click to edit...',
@@ -77,12 +66,7 @@ export const Next: React.FC = () => {
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/next`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newNote),
-            });
-            const savedNote = await res.json();
+            const savedNote = await api.createNote(newNote);
             setNotes(prev => [...prev, savedNote]);
         } catch (error) {
             console.error('Error creating note:', error);

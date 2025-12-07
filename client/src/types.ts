@@ -60,3 +60,29 @@ export interface DiaryByQuestion {
   question: Question;
   entries: DiaryEntry[];
 }
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  color: string;
+  size: 'small' | 'medium' | 'large' | 'wide' | 'tall';
+  createdAt: string;
+  deletedAt: string | null;
+  startedAt: string | null;
+}
+
+export interface ListItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: string;
+}
+
+export interface List {
+  id: string;
+  title: string;
+  createdAt: string;
+  items: ListItem[];
+  color?: string;
+}

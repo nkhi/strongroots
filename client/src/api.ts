@@ -1,4 +1,10 @@
-import type { Habit, HabitEntry, Vlog, DiaryByQuestion } from './types';
+import type { HabitEntry, Vlog } from './types';
+import * as habits from './api/habits';
+import * as tasks from './api/tasks';
+import * as diary from './api/diary';
+import * as vlogs from './api/vlogs';
+import * as next from './api/next';
+import * as lists from './api/lists';
 
 export class HabitAPI {
   private baseUrl: string;
@@ -7,152 +13,40 @@ export class HabitAPI {
     this.baseUrl = baseUrl;
   }
 
-  async getHabits(): Promise<Habit[]> {
-    const response = await fetch(`${this.baseUrl}/habits`);
-    if (!response.ok) throw new Error('Failed to fetch habits');
-    return response.json();
-  }
+  // Habits
+  getHabits() { return habits.getHabits(this.baseUrl); }
+  getEntries(from: string, to: string) { return habits.getEntries(this.baseUrl, from, to); }
+  saveEntry(entry: Partial<HabitEntry>) { return habits.saveEntry(this.baseUrl, entry); }
 
-  async getEntries(from: string, to: string): Promise<HabitEntry[]> {
-    const response = await fetch(`${this.baseUrl}/habit-entries?from=${from}&to=${to}`);
-    if (!response.ok) throw new Error('Failed to fetch entries');
-    return response.json();
-  }
+  // Vlogs
+  getVlog(weekStartDate: string) { return vlogs.getVlog(this.baseUrl, weekStartDate); }
+  saveVlog(vlog: Vlog) { return vlogs.saveVlog(this.baseUrl, vlog); }
 
-  async saveEntry(entry: Partial<HabitEntry>): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/habit-entry`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry)
-    });
-    if (!response.ok) throw new Error('Failed to save entry');
-  }
+  // Tasks
+  getTasks() { return tasks.getTasks(this.baseUrl); }
+  getTasksForWeek(start: string, end: string) { return tasks.getTasksForWeek(this.baseUrl, start, end); }
+  createTask(task: import('./types').Task) { return tasks.createTask(this.baseUrl, task); }
+  updateTask(id: string, updates: Partial<import('./types').Task>) { return tasks.updateTask(this.baseUrl, id, updates); }
+  deleteTask(id: string) { return tasks.deleteTask(this.baseUrl, id); }
 
-  async getVlog(weekStartDate: string): Promise<Vlog | null> {
-    const response = await fetch(`${this.baseUrl}/vlogs/${weekStartDate}`);
-    if (!response.ok) throw new Error('Failed to fetch vlog');
-    return response.json();
-  }
+  // Diary
+  getQuestions() { return diary.getQuestions(this.baseUrl); }
+  saveQuestion(question: import('./types').Question) { return diary.saveQuestion(this.baseUrl, question); }
+  getDiary() { return diary.getDiary(this.baseUrl); }
+  createDiaryEntry(entry: import('./types').DiaryEntry) { return diary.createDiaryEntry(this.baseUrl, entry); }
+  saveDiaryEntry(entry: import('./types').DiaryEntry) { return diary.saveDiaryEntry(this.baseUrl, entry); }
+  updateDiaryEntry(id: string, updates: Partial<import('./types').DiaryEntry>) { return diary.updateDiaryEntry(this.baseUrl, id, updates); }
+  deleteDiaryEntry(id: string) { return diary.deleteDiaryEntry(this.baseUrl, id); }
+  getDiaryByQuestion() { return diary.getDiaryByQuestion(this.baseUrl); }
 
-  async saveVlog(vlog: Vlog): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/vlogs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(vlog)
-    });
-    if (!response.ok) throw new Error('Failed to save vlog');
-  }
+  // Next
+  getNotes() { return next.getNotes(this.baseUrl); }
+  createNote(note: Partial<import('./types').Note>) { return next.createNote(this.baseUrl, note); }
+  updateNote(id: string, updates: Partial<import('./types').Note>) { return next.updateNote(this.baseUrl, id, updates); }
 
-  async getTasks(): Promise<Record<string, import('./types').Task[]>> {
-    const response = await fetch(`${this.baseUrl}/tasks`);
-    if (!response.ok) throw new Error('Failed to fetch tasks');
-    return response.json();
-  }
-
-  async getTasksForWeek(start: string, end: string): Promise<Record<string, import('./types').Task[]>> {
-    const response = await fetch(`${this.baseUrl}/tasks/week?start=${start}&end=${end}`);
-    if (!response.ok) throw new Error('Failed to fetch tasks for week');
-    return response.json();
-  }
-
-  async createTask(task: import('./types').Task): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/tasks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task)
-    });
-    if (!response.ok) throw new Error('Failed to create task');
-  }
-
-  async updateTask(id: string, updates: Partial<import('./types').Task>): Promise<import('./types').Task> {
-    const response = await fetch(`${this.baseUrl}/tasks/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
-    if (!response.ok) throw new Error('Failed to update task');
-    return response.json();
-  }
-
-  async deleteTask(id: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/tasks/${id}`, {
-      method: 'DELETE'
-    });
-    if (!response.ok) throw new Error('Failed to delete task');
-  }
-
-
-
-  async getQuestions(): Promise<import('./types').Question[]> {
-    const response = await fetch(`${this.baseUrl}/questions`);
-    if (!response.ok) throw new Error('Failed to fetch questions');
-    return response.json();
-  }
-
-  async saveQuestion(question: import('./types').Question): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/questions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(question)
-    });
-    if (!response.ok) throw new Error('Failed to save question');
-  }
-
-  async getDiary(): Promise<Record<string, import('./types').DiaryEntry[]>> {
-    const response = await fetch(`${this.baseUrl}/diary`);
-    if (!response.ok) throw new Error('Failed to fetch diary');
-    return response.json();
-  }
-
-  async createDiaryEntry(entry: import('./types').DiaryEntry): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/diary-entries`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry)
-    });
-    if (!response.ok) throw new Error('Failed to create diary entry');
-  }
-
-  async saveDiaryEntry(entry: import('./types').DiaryEntry): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/diary-entries`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry)
-    });
-    if (!response.ok) throw new Error('Failed to save diary entry');
-  }
-
-  async updateDiaryEntry(id: string, updates: Partial<import('./types').DiaryEntry>): Promise<import('./types').DiaryEntry> {
-    const response = await fetch(`${this.baseUrl}/diary-entries/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates)
-    });
-    if (!response.ok) throw new Error('Failed to update diary entry');
-    return response.json();
-  }
-
-  async deleteDiaryEntry(id: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/diary-entries/${id}`, {
-      method: 'DELETE'
-    });
-    if (!response.ok) throw new Error('Failed to delete diary entry');
-  }
-
-  async getDiaryByQuestion(): Promise<DiaryByQuestion[]> {
-    const [questions, diary] = await Promise.all([
-      this.getQuestions(),
-      this.getDiary()
-    ]);
-
-    // diary is Record<string, DiaryEntry[]> (keyed by date)
-    const allEntries = Object.values(diary).flat();
-
-    return questions.map(question => ({
-      question,
-      entries: allEntries
-        .filter(e => e.questionId === question.id)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    }));
-  }
+  // Lists
+  getLists() { return lists.getLists(this.baseUrl); }
+  createList(list: Partial<import('./types').List>) { return lists.createList(this.baseUrl, list); }
+  updateList(id: string, updates: Partial<import('./types').List>) { return lists.updateList(this.baseUrl, id, updates); }
+  deleteList(id: string) { return lists.deleteList(this.baseUrl, id); }
 }

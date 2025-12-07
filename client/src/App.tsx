@@ -106,8 +106,8 @@ function App() {
           </div>
         )}
         {activeTab === 'logs' && <Diary apiBaseUrl={API_BASE_URL} />}
-        {activeTab === 'next' && <Next />}
-        {activeTab === 'lists' && <Lists />}
+        {activeTab === 'next' && <Next apiBaseUrl={API_BASE_URL} />}
+        {activeTab === 'lists' && <Lists apiBaseUrl={API_BASE_URL} />}
       </main>
     </div>
   );

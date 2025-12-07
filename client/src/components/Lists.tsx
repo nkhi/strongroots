@@ -1,28 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Plus, Trash, Check } from '@phosphor-icons/react';
 import { CARD_COLORS } from '../constants/colors';
+import { HabitAPI } from '../api';
+import type { List, ListItem } from '../types';
 import './Lists.css';
 
-const API_BASE_URL = 'http://localhost:3000';
-
-interface ListItem {
-    id: string;
-    text: string;
-    completed: boolean;
-    createdAt: string;
+interface ListsProps {
+    apiBaseUrl: string;
 }
 
-interface List {
-    id: string;
-    title: string;
-    createdAt: string;
-    items: ListItem[];
-    color?: string;
-}
-
-export const Lists: React.FC = () => {
+export const Lists: React.FC<ListsProps> = ({ apiBaseUrl }) => {
     const [lists, setLists] = useState<List[]>([]);
     const [newItemText, setNewItemText] = useState<Record<string, string>>({});
+    const api = useRef(new HabitAPI(apiBaseUrl)).current;
 
     useEffect(() => {
         fetchLists();
@@ -30,8 +20,7 @@ export const Lists: React.FC = () => {
 
     const fetchLists = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/lists`);
-            const data = await res.json();
+            const data = await api.getLists();
             setLists(data);
         } catch (error) {
             console.error('Error fetching lists:', error);
@@ -43,11 +32,7 @@ export const Lists: React.FC = () => {
         setLists(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
 
         try {
-            await fetch(`${API_BASE_URL}/lists/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
+            await api.updateList(id, updates);
         } catch (error) {
             console.error('Error updating list:', error);
             fetchLists();
@@ -65,19 +50,14 @@ export const Lists: React.FC = () => {
 
         const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
-        const newList = {
+        const newList: Partial<List> = {
             id: crypto.randomUUID(),
             title: 'New List',
             color: randomColor,
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/lists`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newList),
-            });
-            const savedList = await res.json();
+            const savedList = await api.createList(newList);
             setLists(prev => [...prev, savedList]);
         } catch (error) {
             console.error('Error creating list:', error);
@@ -89,9 +69,7 @@ export const Lists: React.FC = () => {
 
         setLists(prev => prev.filter(l => l.id !== id));
         try {
-            await fetch(`${API_BASE_URL}/lists/${id}`, {
-                method: 'DELETE',
-            });
+            await api.deleteList(id);
         } catch (error) {
             console.error('Error deleting list:', error);
             fetchLists();
@@ -142,14 +120,6 @@ export const Lists: React.FC = () => {
         const updatedItems = list.items.map(item =>
             item.id === itemId ? { ...item, text: newText } : item
         );
-        // We don't want to sync to server on every keystroke, so we just update local state here
-        // and maybe sync on blur? Or just sync on every keystroke for simplicity if performance allows.
-        // For now, let's sync on blur or just rely on the fact that updateList does optimistic update + fetch.
-        // Actually, updateList triggers a fetch. Doing this on every keystroke is bad.
-        // Let's just update local state here and have a separate onBlur handler for syncing.
-
-        // Wait, updateList does optimistic update AND fetch.
-        // So we should NOT call updateList on change.
 
         setLists(prev => prev.map(l => l.id === listId ? { ...l, items: updatedItems } : l));
     };
