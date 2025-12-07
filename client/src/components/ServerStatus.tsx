@@ -27,9 +27,9 @@ export const ServerStatus = ({ apiBaseUrl }: { apiBaseUrl: string }) => {
     }, [apiBaseUrl]);
 
     // Only show when definitely offline
-    // if (isOnline !== false) {
-    //     return null;
-    // }
+    if (isOnline !== false) {
+        return null;
+    }
 
     // Styles for the indicator
     const indicatorStyle: React.CSSProperties = {
