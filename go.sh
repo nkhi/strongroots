@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Initialize data files if they don't exist
-# ./scripts/init-data.sh
-
 # Function to cleanup background processes
 cleanup() {
   echo -e "\n\n[SHUTDOWN] Stopping server..."
