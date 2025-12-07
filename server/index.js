@@ -1,6 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./db');
+const fs = require('fs');
+const path = require('path');
+const logFile = path.join(__dirname, 'server.log');
+
+function logToFile(msg) {
+  try {
+    fs.appendFileSync(logFile, msg + '\n');
+  } catch (e) {
+    // ignore logging errors
+  }
+}
 
 console.log('[SERVER] 🏁 Starting server process...');
 
@@ -21,13 +32,20 @@ app.use((req, res, next) => {
   // Capture original end to handle response body if needed (optional, but good for errors)
   // For now, we'll just stick to the 'finish' event for the main log line
   
+  // Wrap res.json to capture body for logging
+  const originalJson = res.json;
+  res.json = function (body) {
+    res.locals = res.locals || {};
+    res.locals.responseBody = body;
+    return originalJson.call(this, body);
+  };
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     const timestamp = new Date().toISOString();
     const status = res.statusCode;
     
     // Colorize status
-    let statusLog = status;
     // Simple visual indicator for status
     const statusIcon = status >= 500 ? '🔥' : status >= 400 ? '⚠️' : '✅';
     
@@ -37,7 +55,22 @@ app.use((req, res, next) => {
     }
     
     // Log the single line
-    console.log(`[SERVER] ${timestamp} | ${statusIcon} ${status} | ${duration.toString().padStart(4)}ms | ${req.method.padEnd(6)} ${req.path}${extraInfo}`);
+    const logLine = `[SERVER] ${timestamp} | ${statusIcon} ${status} | ${duration.toString().padStart(4)}ms | ${req.method.padEnd(6)} ${req.path}${extraInfo}`;
+    console.log(logLine);
+    logToFile(logLine);
+
+    // Verbose logging for mutations or errors
+    // if (['POST', 'PATCH', 'PUT'].includes(req.method)) {
+    //   const bodyLog = `[SERVER]      📦 Body: ${JSON.stringify(req.body)}`;
+    //   console.log(bodyLog);
+    //   logToFile(bodyLog);
+    // }
+
+    if (status >= 400 && res.locals?.responseBody) {
+      const errorLog = `[SERVER]      ❌ Error: ${JSON.stringify(res.locals.responseBody)}`;
+      console.log(errorLog);
+      logToFile(errorLog);
+    }
   });
 
   next();
@@ -263,7 +296,10 @@ app.patch('/tasks/:id', async (req, res) => {
     `, values);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Task not found' });
+      const msg = `[SERVER] ⚠️ Task not found for update: ${id}`;
+      console.log(msg);
+      logToFile(msg);
+      return res.status(404).json({ error: `Task with ID ${id} not found` });
     }
     
     const t = result.rows[0];
