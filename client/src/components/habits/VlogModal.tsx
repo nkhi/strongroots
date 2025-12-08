@@ -1,4 +1,5 @@
 import type { Vlog } from '../../types';
+import styles from './HabitTracker.module.css';
 
 interface VlogModalProps {
   vlog: Vlog;
@@ -7,12 +8,8 @@ interface VlogModalProps {
 
 export default function VlogModal({ vlog, onClose }: VlogModalProps) {
   return (
-    <div className="vlog-modal-overlay" onClick={onClose}>
-      click me
-      <div className="vlog-modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* <button className="vlog-modal-close" onClick={onClose}>
-          ✕
-        </button> */}
+    <div className={styles.vlogModalOverlay} onClick={onClose}>
+      <div className={styles.vlogModalContent} onClick={(e) => e.stopPropagation()}>
         <div dangerouslySetInnerHTML={{ __html: vlog.embedHtml }} />
       </div>
     </div>
