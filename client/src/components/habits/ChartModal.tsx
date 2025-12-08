@@ -11,6 +11,7 @@ import {
     LabelList
 } from 'recharts';
 import type { Habit } from '../../types';
+import styles from './HabitTracker.module.css';
 
 interface ChartModalProps {
     data: any[];
@@ -74,9 +75,9 @@ export default function ChartModal({ data, habits, onClose }: ChartModalProps) {
     };
 
     return (
-        <div className="vlog-modal-overlay" onClick={onClose}>
+        <div className={styles.vlogModalOverlay} onClick={onClose}>
             <div
-                className="vlog-modal-content"
+                className={styles.vlogModalContent}
                 onClick={(e) => {
                     e.stopPropagation();
                     // Optional: Clicking background could clear selection, but let's keep it sticky for now

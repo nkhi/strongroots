@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { setup } from '@loomhq/record-sdk';
 import { isSupported } from '@loomhq/record-sdk/is-supported';
 import { oembed } from '@loomhq/loom-embed';
+import styles from './HabitTracker.module.css';
 
 const PUBLIC_APP_ID = 'fae3c61b-58d9-47dc-9cc8-c148e8d8dbaf';
 
@@ -24,7 +25,7 @@ export function LoomRecorder({ weekStart, onSave, onCancel }: LoomRecorderProps)
   async function setupLoom() {
     try {
       setIsChecking(true);
-      
+
       // Check browser support first
       const { supported, error: supportError } = await isSupported();
 
@@ -71,13 +72,13 @@ export function LoomRecorder({ weekStart, onSave, onCancel }: LoomRecorderProps)
   }
 
   return (
-    <div className="loom-recorder-modal">
-      <div className="loom-recorder-content">
+    <div className={styles.loomRecorderModal}>
+      <div className={styles.loomRecorderContent}>
         <h2>Record Weekly Vlog</h2>
         <p>Record your thoughts and progress for the week</p>
-        
+
         {error && (
-          <div className="error-message">
+          <div className={styles.errorMessage}>
             {error}
             <p style={{ marginTop: '8px', fontSize: '12px' }}>
               Make sure third-party cookies are enabled and you're using a supported browser (Chrome, Edge, or Brave).
@@ -85,15 +86,15 @@ export function LoomRecorder({ weekStart, onSave, onCancel }: LoomRecorderProps)
           </div>
         )}
 
-        <div className="loom-recorder-actions">
+        <div className={styles.loomRecorderActions}>
           <button
             ref={buttonRef}
-            className="loom-record-button"
+            className={styles.loomRecordButton}
             disabled={!isReady || isChecking}
           >
             {isChecking ? 'Checking compatibility...' : isReady ? 'Start Recording' : 'Not Available'}
           </button>
-          <button onClick={onCancel} className="cancel-button">
+          <button onClick={onCancel} className={styles.cancelButton}>
             Cancel
           </button>
         </div>
