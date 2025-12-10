@@ -4,7 +4,9 @@ import type { Habit, HabitEntry, Vlog } from '../../types';
 import { DateUtility, getGrade, generateId } from '../../utils';
 import VlogModal from './VlogModal';
 import ChartModal from './ChartModal';
-import { VideoCameraIcon, SunHorizonIcon, MoonIcon, HeartIcon, TreeIcon, BarbellIcon, ResizeIcon, PresentationChartIcon } from '@phosphor-icons/react';
+import { TimeFilterButtons } from './TimeFilterButtons';
+import { HabitTimeIcon } from './habitTimeConfig';
+import { VideoCameraIcon, HeartIcon } from '@phosphor-icons/react';
 import styles from './HabitTracker.module.css';
 
 const CONFIG = {
@@ -23,7 +25,6 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
   const [dates, setDates] = useState<Date[]>([]);
   const [vlogs, setVlogs] = useState<Map<string, Vlog>>(new Map());
   const [viewingVlog, setViewingVlog] = useState<Vlog | null>(null);
-  const [showChart, setShowChart] = useState(false);
   const [loomSupported, setLoomSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,9 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
   const loomButtonRef = useRef<HTMLButtonElement | null>(null);
   const sdkButtonRef = useRef<any>(null);
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());
+  const [selectedTimeFilter, setSelectedTimeFilter] = useState<string | null>(null);
+  const [dynamicRowHeight, setDynamicRowHeight] = useState<number | null>(null);
+  const theadRef = useRef<HTMLTableSectionElement>(null);
   const recordingWeekRef = useRef<Date | null>(null);
 
   const weeks = useMemo(() => {
@@ -50,7 +54,6 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
   }, [dates]);
 
   const chartData = useMemo(() => {
-    if (!showChart) return [];
     return weeks.map(week => {
       const weekStart = new Date(week.key + 'T00:00:00');
       const weekEnd = week.end;
@@ -96,7 +99,56 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
 
       return dataPoint;
     });
-  }, [showChart, weeks, habits, entries]);
+  }, [weeks, habits, entries]);
+
+  // Memoize filtered habits for dynamic height calculation
+  const filteredHabits = useMemo(() => {
+    return habits.filter(habit => !selectedTimeFilter || habit.defaultTime === selectedTimeFilter);
+  }, [habits, selectedTimeFilter]);
+
+  // Calculate dynamic row height when filtering
+  useEffect(() => {
+    if (!selectedTimeFilter) {
+      // No filter active - use default fixed height
+      setDynamicRowHeight(null);
+      return;
+    }
+
+    const calculateRowHeight = () => {
+      if (!tableWrapperRef.current || !theadRef.current || filteredHabits.length === 0) {
+        return;
+      }
+
+      const wrapperHeight = tableWrapperRef.current.clientHeight;
+      const theadHeight = theadRef.current.clientHeight;
+      const availableHeight = wrapperHeight - theadHeight;
+
+      // Calculate height per row, with only a min 48px bound (no max - let rows expand fully)
+      const calculatedHeight = Math.floor(availableHeight / filteredHabits.length);
+      const boundedHeight = Math.max(48, calculatedHeight);
+
+      setDynamicRowHeight(boundedHeight);
+    };
+
+    // Use requestAnimationFrame to ensure layout is complete before measuring
+    const rafId = requestAnimationFrame(() => {
+      calculateRowHeight();
+    });
+
+    // Set up ResizeObserver for responsive updates
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(calculateRowHeight);
+    });
+
+    if (tableWrapperRef.current) {
+      resizeObserver.observe(tableWrapperRef.current);
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+    };
+  }, [selectedTimeFilter, filteredHabits.length]);
 
   useEffect(() => {
     loadData();
@@ -410,28 +462,15 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
     <>
       <div className={styles.tableWrapper} ref={tableWrapperRef}>
         <table className={styles.habitTable}>
-          <thead id="table-head">
+          <thead id="table-head" ref={theadRef}>
             <tr>
               <th className={styles.trendsHeader}>
-                <button
-                  className={styles.trendsButton}
-                  onClick={() => setShowChart(true)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#888',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%',
-                    gap: '4px'
-                  }}
-                  title="View Trends"
-                >
-                  <PresentationChartIcon size={24} weight="duotone" /> <span>Trends</span>
-                </button>
+                <TimeFilterButtons
+                  selectedTimeFilter={selectedTimeFilter}
+                  onFilterChange={setSelectedTimeFilter}
+                  chartData={chartData}
+                  habits={habits}
+                />
               </th>
               {weeks.map((week) => {
                 const isExpanded = expandedWeeks.has(week.key);
@@ -504,104 +543,96 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
             </tr>
           </thead>
           <tbody id="table-body">
-            {habits.sort((a, b) => a.order - b.order).map(habit => (
-              <tr key={habit.id}>
-                <td>
-                  <div className={styles.habitName}>
-                    <span className={`${styles.timeIcon} ${habit.defaultTime}`}>
-                      {habit.defaultTime === 'morning' && (
-                        <SunHorizonIcon size={20} weight="duotone" color="orange" />
-                      )}
-                      {habit.defaultTime === 'night' && (
-                        <MoonIcon size={20} weight="duotone" color="#3ddde6ff" />
-                      )}
-                      {habit.defaultTime === 'health' && (
-                        <TreeIcon size={20} weight="duotone" color="#1ba841ff" />
-                      )}
-                      {habit.defaultTime === 'exercise' && (
-                        <BarbellIcon size={20} weight="duotone" color="#f4244dff" />
-                      )}
-                      {habit.defaultTime === 'weekdays' && (
-                        <ResizeIcon size={20} weight="duotone" color="#a855f7" />
-                      )}
-                    </span>
-                    <div className={styles.habitNameText}>
-                      <span>{habit.name}</span>
-                      {getCurrentStreak(habit.id) > 0 && (
-                        <span className={styles.streakBadge}>
-                          <span className={styles.streakIcon}>
-                            <HeartIcon size={12} weight="fill" />
+            {filteredHabits
+              .sort((a, b) => a.order - b.order)
+              .map(habit => (
+                <tr
+                  key={habit.id}
+                  className={dynamicRowHeight ? styles.dynamicRow : ''}
+                  style={dynamicRowHeight ? { height: `${dynamicRowHeight}px` } : undefined}
+                >
+                  <td>
+                    <div className={styles.habitName}>
+                      <span className={`${styles.timeIcon} ${habit.defaultTime}`}>
+                        <HabitTimeIcon defaultTime={habit.defaultTime} size={20} />
+                      </span>
+                      <div className={styles.habitNameText}>
+                        <span>{habit.name}</span>
+                        {getCurrentStreak(habit.id) > 0 && (
+                          <span className={styles.streakBadge}>
+                            <span className={styles.streakIcon}>
+                              <HeartIcon size={12} weight="fill" />
+                            </span>
+                            <span>{getCurrentStreak(habit.id)}</span>
                           </span>
-                          <span>{getCurrentStreak(habit.id)}</span>
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </td>
-                {weeks.map((week) => {
-                  const isExpanded = expandedWeeks.has(week.key);
-                  const weekStart = new Date(week.key + 'T00:00:00');
-                  const weekEnd = week.end;
+                  </td>
+                  {weeks.map((week) => {
+                    const isExpanded = expandedWeeks.has(week.key);
+                    const weekStart = new Date(week.key + 'T00:00:00');
+                    const weekEnd = week.end;
 
-                  if (!isExpanded) {
-                    const stats = getHabitStats(habit.id, weekStart, weekEnd);
-                    return (
-                      <td
-                        key={week.key}
-                        onClick={() => toggleWeek(week.key)}
-                        style={{ cursor: 'pointer' }}
-                        className={styles.weekSummaryCell}
-                      >
-                        <div className={`${styles.scoreContent} ${styles.hasTooltip}`} data-tooltip={`${stats.grade.letter} (${Math.round(stats.percentage)}%)`}>
-                          <span className={`${styles.scoreGrade} ${styles[stats.grade.class]}`}>
-                            {stats.successCount}/{stats.totalCount}
-                          </span>
-                        </div>
-                      </td>
-                    );
-                  }
-
-                  return week.days.map((date, idx) => {
-                    const entry = getEntry(date, habit.id);
-                    const state = entry?.state || 0;
-                    const isSaturday = date.getDay() === 6;
-
-                    return (
-                      <React.Fragment key={`${week.key}-${idx}`}>
-                        <td>
-                          <div
-                            className={`${styles.cell} ${CONFIG.stateClasses[state]} ${habit.defaultTime === 'weekdays' && (isSaturday || date.getDay() === 0) ? styles.disabled : ''}`}
-                            onClick={() => {
-                              if (habit.defaultTime === 'weekdays' && (isSaturday || date.getDay() === 0)) return;
-                              cycleState(date, habit.id);
-                            }}
-                          >
-                            {habit.defaultTime === 'weekdays' && (isSaturday || date.getDay() === 0) ? (
-                              <span style={{ color: '#333', fontSize: '12px' }}>-</span>
-                            ) : (
-                              CONFIG.stateIcons[state]
-                            )}
+                    if (!isExpanded) {
+                      const stats = getHabitStats(habit.id, weekStart, weekEnd);
+                      return (
+                        <td
+                          key={week.key}
+                          onClick={() => toggleWeek(week.key)}
+                          style={{ cursor: 'pointer' }}
+                          className={styles.weekSummaryCell}
+                        >
+                          <div className={`${styles.scoreContent} ${styles.hasTooltip}`} data-tooltip={`${stats.grade.letter} (${Math.round(stats.percentage)}%)`}>
+                            <span className={`${styles.scoreGrade} ${styles[stats.grade.class]}`}>
+                              {stats.successCount}/{stats.totalCount}
+                            </span>
                           </div>
                         </td>
-                        {isSaturday && (() => {
-                          const weekStartDate = new Date(date.getTime() - 6 * 24 * 60 * 60 * 1000);
-                          const stats = getHabitStats(habit.id, weekStartDate, date);
-                          return (
-                            <td className={styles.scoreCell}>
-                              <div className={`${styles.scoreContent} ${styles.hasTooltip}`} data-tooltip={`${stats.grade.letter} (${Math.round(stats.percentage)}%)`}>
-                                <span className={`${styles.scoreGrade} ${styles[stats.grade.class]}`}>
-                                  {stats.successCount}/{stats.totalCount}
-                                </span>
-                              </div>
-                            </td>
-                          );
-                        })()}
-                      </React.Fragment>
-                    );
-                  });
-                })}
-              </tr>
-            ))}
+                      );
+                    }
+
+                    return week.days.map((date, idx) => {
+                      const entry = getEntry(date, habit.id);
+                      const state = entry?.state || 0;
+                      const isSaturday = date.getDay() === 6;
+
+                      return (
+                        <React.Fragment key={`${week.key}-${idx}`}>
+                          <td>
+                            <div
+                              className={`${styles.cell} ${CONFIG.stateClasses[state]} ${habit.defaultTime === 'weekdays' && (isSaturday || date.getDay() === 0) ? styles.disabled : ''}`}
+                              onClick={() => {
+                                if (habit.defaultTime === 'weekdays' && (isSaturday || date.getDay() === 0)) return;
+                                cycleState(date, habit.id);
+                              }}
+                            >
+                              {habit.defaultTime === 'weekdays' && (isSaturday || date.getDay() === 0) ? (
+                                <span style={{ color: '#333', fontSize: '12px' }}>-</span>
+                              ) : (
+                                CONFIG.stateIcons[state]
+                              )}
+                            </div>
+                          </td>
+                          {isSaturday && (() => {
+                            const weekStartDate = new Date(date.getTime() - 6 * 24 * 60 * 60 * 1000);
+                            const stats = getHabitStats(habit.id, weekStartDate, date);
+                            return (
+                              <td className={styles.scoreCell}>
+                                <div className={`${styles.scoreContent} ${styles.hasTooltip}`} data-tooltip={`${stats.grade.letter} (${Math.round(stats.percentage)}%)`}>
+                                  <span className={`${styles.scoreGrade} ${styles[stats.grade.class]}`}>
+                                    {stats.successCount}/{stats.totalCount}
+                                  </span>
+                                </div>
+                              </td>
+                            );
+                          })()}
+                        </React.Fragment>
+                      );
+                    });
+                  })}
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -610,14 +641,6 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
         <VlogModal
           vlog={viewingVlog}
           onClose={() => setViewingVlog(null)}
-        />
-      )}
-
-      {showChart && (
-        <ChartModal
-          data={chartData}
-          habits={habits}
-          onClose={() => setShowChart(false)}
         />
       )}
     </>

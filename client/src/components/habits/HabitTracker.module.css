@@ -7,6 +7,7 @@
 
 .habitTable {
   width: 100%;
+  height: 100%;
   border-collapse: separate;
   border-spacing: 0;
   min-width: max-content;
@@ -46,6 +47,16 @@
 
 .habitTable tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Dynamic row height for filtered views */
+.dynamicRow {
+  transition: height 0.3s ease-out;
+}
+
+.dynamicRow td {
+  height: inherit;
+  transition: height 0.3s ease-out;
 }
 
 .habitTable tbody td:first-child {
@@ -102,12 +113,16 @@
 }
 
 @keyframes heartbeat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   10% {
     transform: scale(1.1);
   }
+
   20% {
     transform: scale(1);
   }
@@ -243,7 +258,7 @@
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.2s ease, transform 0.2s ease;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -373,15 +388,44 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translate(-50%, 4px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
-.gradeA, .gradeAPlus, .gradeAMinus { color: #059669; }
-.gradeB, .gradeBPlus, .gradeBMinus { color: #0284c7; }
-.gradeC, .gradeCPlus, .gradeCMinus { color: #d97706; }
-.gradeD, .gradeDPlus, .gradeDMinus { color: #dc2626; }
-.gradeF { color: #991b1b; }
+.gradeA,
+.gradeAPlus,
+.gradeAMinus {
+  color: #059669;
+}
+
+.gradeB,
+.gradeBPlus,
+.gradeBMinus {
+  color: #0284c7;
+}
+
+.gradeC,
+.gradeCPlus,
+.gradeCMinus {
+  color: #d97706;
+}
+
+.gradeD,
+.gradeDPlus,
+.gradeDMinus {
+  color: #dc2626;
+}
+
+.gradeF {
+  color: #991b1b;
+}
 
 /* Vlog Button */
 .vlogButton {
@@ -413,17 +457,94 @@
   height: 20px;
 }
 
-/* Trends Button */
-.trendsButton svg,
-.trendsButton span {
-  opacity: 0;
-  transition: opacity 0.2s ease, color 2s ease;
+/* Time Filter Buttons */
+.timeFilterButtons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
 }
 
-.trendsHeader:hover .trendsButton svg,
-.trendsHeader:hover .trendsButton span {
+.timeFilterBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  opacity: 0;
+  color: #555;
+}
+
+/* When hovering over the header cell, show all buttons as gray */
+.trendsHeader:hover .timeFilterBtn {
   opacity: 1;
+  color: #666;
+}
+
+/* When a filter is active, always show all buttons */
+.timeFilterBtn.active,
+.trendsHeader:has(.timeFilterBtn.active) .timeFilterBtn {
+  opacity: 1;
+}
+
+/* Individual button hover colors */
+.timeFilterBtn:hover,
+.timeFilterBtn.active {
+  transform: scale(1.15);
+}
+
+.timeFilterBtn[data-color="orange"]:hover,
+.timeFilterBtn[data-color="orange"].active {
+  color: orange;
+}
+
+.timeFilterBtn[data-color="#3ddde6"]:hover,
+.timeFilterBtn[data-color="#3ddde6"].active {
+  color: #3ddde6;
+}
+
+.timeFilterBtn[data-color="#1ba841"]:hover,
+.timeFilterBtn[data-color="#1ba841"].active {
+  color: #1ba841;
+}
+
+.timeFilterBtn[data-color="#f4244d"]:hover,
+.timeFilterBtn[data-color="#f4244d"].active {
+  color: #f4244d;
+}
+
+.timeFilterBtn[data-color="#a855f7"]:hover,
+.timeFilterBtn[data-color="#a855f7"].active {
+  color: #a855f7;
+}
+
+.timeFilterBtn[data-color="#f42697"]:hover,
+.timeFilterBtn[data-color="#f42697"].active {
+  color: #f42697;
+}
+
+/* Show All Button - always visible when rendered */
+.showAllBtn {
+  opacity: 1 !important;
+  color: #888;
+  margin-left: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: 10px;
+}
+
+.showAllBtn:hover:not(.inactive) {
   color: white;
+}
+
+.showAllBtn.inactive {
+  color: #252525;
+  cursor: default;
+  pointer-events: none;
 }
 
 .collapseBtn {
@@ -573,11 +694,11 @@
   .habitTable tbody td:first-child {
     padding-left: 20px;
   }
-  
+
   .habitTable thead th:first-child {
     padding-left: 20px;
   }
-  
+
   .cell {
     min-width: 60px;
     font-size: 16px;
