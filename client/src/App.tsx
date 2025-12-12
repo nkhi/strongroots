@@ -8,7 +8,7 @@ import { Lists } from './components/lists/Lists';
 import { Memos } from './components/memos/Memos';
 import { Navigation } from './components/shared/Navigation';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = `http://${window.location.hostname}:3000`;
 
 type TabType = 'habits' | 'todos' | 'logs' | 'memos' | 'next' | 'lists';
 

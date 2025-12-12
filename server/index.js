@@ -69,7 +69,7 @@ app.use('/', require('./routes/next'));
 app.use('/', require('./routes/lists'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('\n' + '='.repeat(60));
   console.log(`[SERVER] 🚀 API running on http://0.0.0.0:${PORT}`);
   console.log(`[SERVER] 🐘 Connected to CockroachDB`);

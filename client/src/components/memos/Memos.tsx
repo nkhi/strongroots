@@ -6,7 +6,7 @@ export const Memos: React.FC = () => {
         <div className={styles.memosContainer}>
             <div className={styles.memosLoadingOverlay} />
             <iframe
-                src="http://localhost:5230/"
+                src={`http://${window.location.hostname}:5230/`}
                 className={styles.memosFrame}
                 title="Memos"
             />

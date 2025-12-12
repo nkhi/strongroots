@@ -38,7 +38,7 @@ cd client
 
 # Start Vite dev server in foreground (this will show all output)
 echo "Starting Vite dev server..."
-pnpm run dev --host localhost
+pnpm run dev -- --host 0.0.0.0
 
 # When Vite stops (Ctrl+C), cleanup will kill the server
 cleanup
