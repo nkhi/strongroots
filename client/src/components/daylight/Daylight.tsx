@@ -114,9 +114,9 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: Daylight
     const workStartMarker = workMode ? getWorkHourMarker(9) : null;
     const workEndMarker = workMode ? getWorkHourMarker(17) : null;
 
-    // --- Sleep Marker (11pm) for Normal Mode ---
+    // --- Night Markers (Sleep 11pm, Wake 7am) ---
     // Only visible in "normal" mode (not work mode) and when it is night (moon visible)
-    const getSleepMarker = () => {
+    const getNightHourMarker = (hour: number) => {
         if (workMode || isDay) return null;
 
         let nightStartMs: number;
@@ -128,27 +128,41 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: Daylight
             nightStartMs = sunObject.prevSunset.getTime();
             nightEndMs = sunObject.sunrise.getTime();
             targetTime = new Date(currentTime);
-            targetTime.setDate(targetTime.getDate() - 1); // Yesterday
-            targetTime.setHours(23, 0, 0, 0); // 11pm
+
+            // If the marker hour is "late" (e.g. 23), it belongs to "yesterday" relative to this night span
+            // If the marker hour is "early" (e.g. 7), it belongs to "today" relative to this night span
+            // A simple heuristic is: if hour > 12, it's yesterday. If hour < 12, it's today.
+            if (hour > 12) {
+                targetTime.setDate(targetTime.getDate() - 1); // Yesterday
+            }
+            targetTime.setHours(hour, 0, 0, 0);
         } else {
             // Post-sunset: Night starts today sunset, ends tomorrow sunrise
             nightStartMs = sunObject.sunset.getTime();
             nightEndMs = sunObject.nextSunrise.getTime();
             targetTime = new Date(currentTime);
-            targetTime.setHours(23, 0, 0, 0); // 11pm
+
+            // If the marker hour is "early" (e.g. 7), it belongs to "tomorrow"
+            // If the marker hour is "late" (e.g. 23), it belongs to "today"
+            if (hour < 12) {
+                targetTime.setDate(targetTime.getDate() + 1); // Tomorrow
+            }
+            targetTime.setHours(hour, 0, 0, 0);
         }
 
         const targetMs = targetTime.getTime();
         const progress = (targetMs - nightStartMs) / (nightEndMs - nightStartMs);
         const angleDeg = progress * 180;
 
-        // Hide if outside the visible night arc (though 11pm usually is visible)
+        // Hide if outside the visible night arc
+        // This handles cases like 7am being AFTER sunrise (progress > 1), so it won't show.
         if (progress < 0 || progress > 1) return null;
 
-        return { angleDeg };
+        return { angleDeg, hour };
     };
 
-    const sleepMarker = getSleepMarker();
+    const sleepMarker = getNightHourMarker(23); // 11pm
+    const wakeMarker = getNightHourMarker(7);   // 7am
 
     // --- Icon Selection Logic (V2) ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -174,6 +188,28 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: Daylight
             } else {
                 CurrentIcon = Moon;
             }
+        }
+    }
+
+    // --- Horizon Labels & Times ---
+    let horizonStartLabel = 'Sunrise';
+    let horizonEndLabel = 'Sunset';
+    let horizonStartTime = sunObject.sunrise;
+    let horizonEndTime = sunObject.sunset;
+
+    if (!isDay) {
+        // Night Mode: Horizon goes from Sunset -> Sunrise
+        horizonStartLabel = 'Sunset';
+        horizonEndLabel = 'Sunrise';
+
+        if (nowMs < sunriseMs) {
+            // Pre-dawn
+            horizonStartTime = sunObject.prevSunset;
+            horizonEndTime = sunObject.sunrise;
+        } else {
+            // Post-sunset
+            horizonStartTime = sunObject.sunset;
+            horizonEndTime = sunObject.nextSunrise;
         }
     }
 
@@ -238,14 +274,23 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: Daylight
                                     title="11:00 PM"
                                 />
                             )}
+                            {wakeMarker && (
+                                <div
+                                    className={styles.workHourMarker}
+                                    style={{
+                                        transform: `rotate(${wakeMarker.angleDeg - 90}deg)`,
+                                    }}
+                                    title="7:00 AM"
+                                />
+                            )}
                         </div>
                     </div>
                     <div className={styles.horizonLine}>
-                        <time className={styles.jsSunrise} title="Sunrise" dateTime={timeFormatter(sunObject.sunrise)}>
-                            {timeFormatter(sunObject.sunrise)}
+                        <time className={styles.jsSunrise} title={horizonStartLabel} dateTime={timeFormatter(horizonStartTime)}>
+                            {timeFormatter(horizonStartTime)}
                         </time>
-                        <time className={styles.jsSunset} title="Sunset" dateTime={timeFormatter(sunObject.sunset)}>
-                            {timeFormatter(sunObject.sunset)}
+                        <time className={styles.jsSunset} title={horizonEndLabel} dateTime={timeFormatter(horizonEndTime)}>
+                            {timeFormatter(horizonEndTime)}
                         </time>
                     </div>
                 </div>
