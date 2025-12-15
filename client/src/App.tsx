@@ -41,7 +41,7 @@ function App() {
         />
         <main id="habit-container" className={activeTab}>
           {activeTab === 'todos' && <Todos apiBaseUrl={API_BASE_URL} workMode={WORK_MODE} />}
-          {activeTab === 'daylight' && <Daylight apiBaseUrl={API_BASE_URL} />}
+          {activeTab === 'daylight' && <Daylight apiBaseUrl={API_BASE_URL} workMode={WORK_MODE} />}
           {!WORK_MODE && activeTab === 'habits' && <HabitTracker apiBaseUrl={API_BASE_URL} />}
           {!WORK_MODE && activeTab === 'memos' && <Memos />}
           {!WORK_MODE && activeTab === 'logs' && <Diary apiBaseUrl={API_BASE_URL} />}

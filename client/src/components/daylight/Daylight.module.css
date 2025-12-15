@@ -103,7 +103,8 @@
 .horizonSky {
     height: 260px;
     padding-top: 3.5rem;
-    overflow: hidden;
+    /* Changed from hidden to allow work hour markers to extend below horizon */
+    overflow: visible;
 }
 
 .horizonSkyWrap {
@@ -163,4 +164,19 @@
     justify-content: space-between;
     position: relative;
     z-index: 2;
+}
+
+/* Work hour markers (9am / 5pm radial lines in work mode) */
+.workHourMarker {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 0;
+    /* Arc radius ≈ 50% of container width, reduced 20% for visual fit */
+    height: 16rem;
+    /* Match horizon line thickness (1px) */
+    border-left: 1px dashed currentColor;
+    opacity: 0.45;
+    z-index: 0;
+    transform-origin: bottom center;
 }

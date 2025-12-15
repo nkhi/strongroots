@@ -8,10 +8,11 @@ import { SunDim, Moon, MoonStars, Circle } from '@phosphor-icons/react';
 
 interface DaylightProps {
     apiBaseUrl?: string;
+    workMode?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Daylight({ apiBaseUrl: _apiBaseUrl }: DaylightProps) {
+export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: DaylightProps) {
     const {
         userLocation,
         sunObject,
@@ -90,6 +91,29 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl }: DaylightProps) {
     // With disjoint cycles, progress is always 0..1 roughly.
     const isSunVisible = cycleProgress >= 0 && cycleProgress <= 1;
 
+    // --- Work Hour Markers (9am and 5pm) ---
+    // Calculate radial angle for work hour markers (like sundial spokes)
+    // Progress 0 = sunrise (0°), 0.5 = solar noon (90°), 1 = sunset (180°)
+    // Allow progress outside 0-1 for times before sunrise or after sunset (below horizon)
+    const getWorkHourMarker = (hour: number) => {
+        const targetTime = new Date(currentTime);
+        targetTime.setHours(hour, 0, 0, 0);
+        const targetMs = targetTime.getTime();
+
+        const progress = (targetMs - sunriseMs) / (sunsetMs - sunriseMs);
+        // Convert progress to degrees: 0 -> 0°, 0.5 -> 90°, 1 -> 180°
+        // Values < 0 or > 1 will produce angles beyond the visible arc (below horizon)
+        const angleDeg = progress * 180;
+
+        // Flag if marker is below horizon (before sunrise or after sunset)
+        const isBelow = progress < 0 || progress > 1;
+
+        return { progress, angleDeg, hour, isBelow };
+    };
+
+    const workStartMarker = workMode ? getWorkHourMarker(9) : null;
+    const workEndMarker = workMode ? getWorkHourMarker(17) : null;
+
     // --- Icon Selection Logic (V2) ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let CurrentIcon: any = null; // null means use default circle (V1 behavior)
@@ -150,6 +174,25 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl }: DaylightProps) {
                                     />
                                 )}
                             </span>
+                            {/* Work Hour Markers (9am / 5pm radial lines from center) */}
+                            {workStartMarker && (
+                                <div
+                                    className={styles.workHourMarker}
+                                    style={{
+                                        transform: `rotate(${workStartMarker.angleDeg - 90}deg)`,
+                                    }}
+                                    title="9:00 AM"
+                                />
+                            )}
+                            {workEndMarker && (
+                                <div
+                                    className={styles.workHourMarker}
+                                    style={{
+                                        transform: `rotate(${workEndMarker.angleDeg - 90}deg)`,
+                                    }}
+                                    title="5:00 PM"
+                                />
+                            )}
                         </div>
                     </div>
                     <div className={styles.horizonLine}>
