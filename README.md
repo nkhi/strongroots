@@ -7,58 +7,37 @@ Start aka Start Menu is my command center for habits, daily todos, notes, journa
 ### 📊 **Habits**
 Track your daily habits with convenient rollup metrics.
 
-![Habits Demo](assets/habits.gif)
+![habits](assets/habits.png)
 
-- **Daily tracking** with visual calendar view
 - **Sunday Reflection**: Record an end-of-week video reflection using the built-in **Loom SDK recorder**
-- **Flexible scheduling**: morning, night, exercise, health, weekdays, etc with icon differentiation
-- **Weekly rollups** showing your consistency at a glance
-- **Collapsible week views** to zoom out and see progress over time
-- **State tracking**: ✅ Done, ❌ Failed, `:)` Failed with exception, or `:/` Succeeded Poorly
+- **Flexible categories**: morning, night, exercise, health, weekdays, etc with icon differentiation and quick filtering
+- **Collapsible week views** See weekly progress rolled up over time
+- **State tracking**: Customizable states: ✅ Done, ❌ Failed, 🙂 Failed with exception, or 🫤 Succeeded Poorly
 
 ### ✅ **Todos**
 Daily task management separated by **Life** and **Work**. Inspired by [Tweek](https://tweek.so/).
 
-- **Single-day focus** - see only today's tasks
+![todos](assets/todos.png)
+
 - **Easy task punting** - move incomplete tasks to the next day
-- **State tracking**: Active, Completed, or Failed
-- **Quick add** - type and hit enter to create tasks
-- **Smart sorting** - unfinished tasks always appear first
+- **Status sorting** - unfinished tasks always appear first
+- **Work life balance** - lol. Tasks are split into two columns, life and work. When `?mode=work` is added to the URL, only work tasks are shown/fetched.
 
 ### 💭 **Memos**
-Integrated [Memos](https://github.com/usememos/memos) iframe for quick thoughts and notes.
+Integrated [Memos](https://github.com/usememos/memos) as an iFrame for quick thoughts and notes. Better than a notes app where everything gets lost. Memos has search, hashtags, date-filters, and more.
 
-- **Runs locally** alongside the app
-- **Lightweight note-taking** without leaving your workflow
-- **Privacy-first** - all data stays on your machine
+![memos](assets/memos.png)
 
 ### 📔 **Journal**
 Daily check-ins with thoughtful prompts worth asking every day.
 
-- **Configurable questions** like:
-  - "What went well today?"
-  - "What did you eat today?"
-
-- **Ad-hoc questions** - add day-specific prompts
-- **Full-width cards** for comfortable writing
-
 ### 📝 **Lists**
-Organize ideas and groups of thoughts that belong together. Looks like Todoist Kanban view.
-
-- **Perfect for**:
-  - Groceries
-  - Furniture ideas
-  - Movie watchlists
-- **Checkbox items** to track completion
-- **Quick add/edit** - inline editing for speed
+Organize ideas and groups of thoughts that belong together. Looks like Todoist Kanban view. **Perfect for**: Groceries, Furniture ideas, Movie watchlists.
 
 ### 🌱 **Grow**
-Google Keep-style cards for ideas on what to do next.
+Google Keep-style cards for ideas on what to do next. Mosaic tile layout with variable colors and tile sizes. 
 
-- **Visual card layout** with different sizes (small, medium, large, tall, wide)
-- **Start/Archive** - move cards when you begin or complete them
-
-### Bonus: Daylight (Screensaver)
+### ☀️ **Daylight** (Bonus/Screensaver)
 
 ![phases and lines demo](/assets/demo.gif)
 
@@ -70,16 +49,14 @@ Google Keep-style cards for ideas on what to do next.
 
 ![alt text](image.png) -->
 
-[Daylight by bakkenbaeck](https://daylight.today/app/) is a simple, beautiful sun position visualizer powered by `sunCalc`, a React library that returns the suns location based on your timezone. I decided to fork it to add more color schemes, more icons, more sayings, and fixed lines to mark the 9-5 and bedtime. I also zoomed in a bit, which is really satisfying. 
-
-In this app it's like a nice screensaver that you can leave on all day long.
+[Daylight by bakkenbaeck](https://daylight.today/app/) is a simple, beautiful sun position visualizer powered by `sunCalc`, a React library that returns the suns location based on your timezone, and I've been using their website for years. [Since it's open source](https://github.com/bakkenbaeck/daylight-web), I decided to fork it to add more color schemes, more icons, more sayings, and fixed lines to mark the 9-5 and bedtime. I also zoomed in a bit, which is really satisfying. It acts as a nice screensaver that you can leave on all day.
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js (v16+)
 - pnpm
-- CockroachDB or psql of some kind
+- CockroachDB (or any PostgreSQL-compatible database)
 
 ### Installation
 
@@ -91,53 +68,60 @@ In this app it's like a nice screensaver that you can leave on all day long.
 
 2. **Install dependencies**
    ```bash
-   # Install server dependencies
-   cd server
-   npm install
-   cd ..
-
-   # Install client dependencies
-   cd client
-   pnpm install
-   cd ..
+   cd server && npm install && cd ..
+   cd client && pnpm install && cd ..
    ```
 
-3. **Start the app**
+3. **Configure the database**
+   
+   Create a `.env` file in the `server/` directory:
+   ```bash
+   PORT=3000
+   DATABASE_URL=<your-cockroachdb-connection-string>
+   ```
+
+4. **Start the app**
    ```bash
    ./go.sh
    ```
 
    This will:
-   - Initialize any missing data files
    - Start the API server on `http://localhost:3000`
-   - Start the client on `http://localhost:5174`
+   - Start the client on `http://localhost:5173`
    - Open your browser automatically
 
 ## Project Structure
 
 ```
 habits/
-├── client/              # React frontend
+├── client/                  # React + TypeScript + Vite frontend
 │   ├── src/
-│   │   ├── components/  # UI components (Habits, Todos, Diary, etc.)
-│   │   ├── types.ts     # TypeScript interfaces
-│   │   └── App.tsx      # Main app with navigation
+│   │   ├── api/             # API client functions
+│   │   ├── components/      # UI components by feature
+│   │   │   ├── habits/      # Habit tracking
+│   │   │   ├── today/       # Todos
+│   │   │   ├── journal/     # Diary/Journal
+│   │   │   ├── lists/       # Kanban lists
+│   │   │   ├── grow/        # Ideas cards
+│   │   │   ├── memos/       # Memos iframe
+│   │   │   ├── daylight/    # Screensaver
+│   │   │   └── shared/      # Navigation, common components
+│   │   ├── types.ts         # TypeScript interfaces
+│   │   └── App.tsx          # Main app with routing
 │   └── package.json
-├── server/              # Express API
-│   ├── index.js         # API endpoints
+├── server/                  # Express.js API
+│   ├── index.js             # Server setup & middleware
+│   ├── db.js                # PostgreSQL connection pool
+│   ├── routes/              # API route handlers
+│   │   ├── habits.js
+│   │   ├── tasks.js
+│   │   ├── diary.js
+│   │   ├── lists.js
+│   │   ├── next.js
+│   │   └── vlogs.js
 │   └── package.json
-├── data/                # Local data storage (gitignored)
-│   ├── habits.csv       # Habit configurations
-│   ├── entries.csv      # Habit entry records
-│   ├── tasks.json       # Daily tasks
-│   ├── diary.json       # Journal entries
-│   ├── questions.csv    # Journal questions
-│   ├── next.json        # Next ideas cards
-│   ├── lists.json       # List data
-│   └── vlogs.csv        # Video reflections
-├── scripts/
-│   └── init-data.sh     # Data initialization script
-├── go.sh                # Startup script
+├── assets/                  # Demo GIFs and images
+├── go.sh                    # One-command startup script
 └── README.md
 ```
 
@@ -145,28 +129,29 @@ habits/
 
 - **Web Client**: React + TypeScript + Vite
 - **API Server**: Node.js + Express
-- **Storage**: CockroachDB
-- **Styling**: Bad CSS written with Gemini (i am not this bad at css) with Phosphor Icons
+- **Database**: CockroachDB (PostgreSQL-compatible)
+- **Styling**: CSS Modules with Phosphor Icons
 - **Video**: Loom SDK
-
 
 ## Data Storage
 
-Data is stored in **CockroachDB**.
-Their free tier is very generous and should be more than enough for personal use.
-They do require a CC but with price limiting, and 15$ of free credits every month, this works very well for this project.
+All data is stored in **CockroachDB** using the following tables:
+
+| Table | Purpose |
+|-------|---------|
+| `habits` | Habit definitions (name, schedule, order) |
+| `entries` | Daily habit entries (date, state) |
+| `tasks` | Todo items (text, date, category, state) |
+| `questions` | Journal prompts |
+| `diary_entries` | Journal answers |
+| `lists` | List containers |
+| `list_items` | Items within lists |
+| `next_items` | Ideas/notes cards |
+| `vlogs` | Weekly video reflections |
+
+CockroachDB's free tier is very generous and should be more than enough for personal use.
+They do require a CC but with price limiting, and $15 of free credits every month, this works very well for this project.
 Thank you Venture Capitalist who is paying for me to improve myself. I will eat you.
-
-You must create a `.env` file in the `server` root with the following variables:
-
-```bash
-PORT=3000
-DATABASE_URL=postgresql://.......
-``` 
-
-## Backups
-
-TODO!
 
 ## Development
 
@@ -177,57 +162,68 @@ TODO!
 
 ### Server only
 ```bash
-cd server
-node index.js
+cd server && node index.js
 ```
 
 ### Client only
 ```bash
-cd client
-pnpm run dev
+cd client && pnpm run dev
 ```
 
 ### Building for production
 ```bash
-cd client
-pnpm run build
+cd client && pnpm run build
 ```
+
+### Work Mode
+Access `?mode=work` in the URL for a privacy-focused mode that only shows work tasks.
+
+Useful for separating personal data from work — only the Todos tab is visible, and it fetches only the "Work" column using dedicated work-only APIs. Daylight still works and displays time markers for 9am and 5pm.
 
 ## API Endpoints
 
+> See [server/README.md](server/README.md) for the complete API reference.
+
 ### Habits
 - `GET /habits` - Get all active habits
-- `GET /habit-entries?from=YYYY-MM-DD&to=YYYY-MM-DD` - Get entries in date range
-- `POST /habit-entry` - Create/update a habit entry
+- `GET /habit-entries?from=&to=` - Get entries in date range
+- `POST /habit-entry` - Create/update entry
 
 ### Tasks
 - `GET /tasks` - Get all tasks
-- `POST /tasks` - Save all tasks
+- `GET /tasks/week?start=&end=` - Get tasks for date range
+- `POST /tasks` - Create task
+- `PATCH /tasks/:id` - Update task
+- `DELETE /tasks/:id` - Delete task
+- `POST /tasks/batch/punt` - Punt multiple tasks to next day
+- `POST /tasks/batch/fail` - Fail multiple tasks
 
 ### Diary
-- `GET /questions` - Get all active questions
-- `POST /questions` - Add a new question
+- `GET /questions` - Get all questions
+- `POST /questions` - Create question
 - `GET /diary` - Get all diary entries
-- `POST /diary` - Save diary entries
-
-### Next
-- `GET /next` - Get all active next items
-- `POST /next` - Create a new next item
-- `PATCH /next/:id` - Update a next item
+- `POST /diary-entries` - Create/update entry
+- `PATCH /diary-entries/:id` - Update entry
+- `DELETE /diary-entries/:id` - Delete entry
 
 ### Lists
-- `GET /lists` - Get all lists
-- `POST /lists` - Create a new list
-- `PATCH /lists/:id` - Update a list
-- `DELETE /lists/:id` - Delete a list
+- `GET /lists` - Get all lists with items
+- `POST /lists` - Create list
+- `PATCH /lists/:id` - Update list
+- `DELETE /lists/:id` - Delete list
+
+### Next (Ideas)
+- `GET /next` - Get all ideas
+- `POST /next` - Create idea
+- `PATCH /next/:id` - Update idea
 
 ### Vlogs
-- `GET /vlogs/:weekStartDate` - Get vlog for a specific week
-- `POST /vlogs` - Save a vlog
+- `GET /vlogs/:weekStartDate` - Get vlog for week
+- `POST /vlogs` - Create/update vlog
 
 ## Design
 
-**Strong Roots** is built around a few core principles:
+**Start** is built around a few core principles:
 
 1. **Single source of truth** - One app for all your personal organization
 2. **Minimal friction** - Quick to open, quick to use
@@ -236,10 +232,18 @@ pnpm run build
 
 ## Privacy
 
-All data is stored locally on your machine. Nothing is sent to external servers. Your habits, tasks, and reflections are yours alone.
+All data is stored in your own CockroachDB instance. Nothing is sent to external servers except what you explicitly configure (like Loom for video reflections).
 
 ## Acknowledgments
 
-- [Memos](https://github.com/usememos/memos) - For the embedded note-taking experience
+Tools:
 - [Phosphor Icons](https://phosphoricons.com/) - For beautiful, consistent icons
 - [Loom SDK](https://www.loom.com/sdk) - For seamless video recording
+
+Open Source used:
+- [Memos](https://github.com/usememos/memos) - For the embedded note-taking experience
+- [Daylight](https://daylight.today/app/) - For the sun position screensaver inspiration
+
+Inspiration:
+- [Tweek](https://tweek.so/) - Todos
+- [BeaverHabits](https://beaverhabits.com/) - Habit tracking

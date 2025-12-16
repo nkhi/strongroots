@@ -1,6 +1,6 @@
 # Client
 
-React + TypeScript + Vite frontend for the habits tracker.
+React + TypeScript + Vite frontend for Start.
 
 ## Quick Start
 
@@ -9,7 +9,7 @@ pnpm install
 pnpm run dev
 ```
 
-Runs on `http://localhost:5173`
+Runs on `http://localhost:5173` (with `--host 0.0.0.0` for local network access).
 
 ## Tech Stack
 
@@ -17,28 +17,92 @@ Runs on `http://localhost:5173`
 - **Vite** for fast dev/build
 - **CSS Modules** for scoped styling
 - **Phosphor Icons** for UI icons
+- **@dnd-kit** for drag-and-drop reordering
 
 ## Project Structure
 
 ```
 src/
-├── components/     # React components (organized by page)
-│   ├── habits/    # Habit tracking table
-│   ├── today/     # Todos & week view
-│   ├── journal/   # Diary & questions
-│   ├── grow/      # Next ideas
-│   ├── lists/     # Task lists
-│   └── shared/    # Reusable components
-├── api.ts         # API client
-├── types.ts       # TypeScript types
-└── utils.ts       # Date utilities & helpers
+├── App.tsx                 # Main app with navigation and routing
+├── types.ts                # TypeScript interfaces for all data types
+├── utils.ts                # Date utilities and helpers
+│
+├── api/                    # API client functions (one file per domain)
+│   ├── habits.ts
+│   ├── tasks.ts
+│   ├── diary.ts
+│   ├── lists.ts
+│   ├── next.ts
+│   └── vlogs.ts
+│
+├── components/
+│   ├── habits/             # Habit tracking with calendar view
+│   │   ├── HabitTracker.tsx
+│   │   ├── ChartModal.tsx
+│   │   ├── LoomRecorder.tsx
+│   │   └── ...
+│   │
+│   ├── today/              # Todo management
+│   │   ├── Todos.tsx
+│   │   ├── WeekView.tsx
+│   │   ├── DraggableTask.tsx
+│   │   └── ...
+│   │
+│   ├── journal/            # Daily diary/journal
+│   │   ├── Diary.tsx
+│   │   ├── QuestionView.tsx
+│   │   └── TimeInputCard.tsx
+│   │
+│   ├── grow/               # Ideas/notes cards
+│   │   └── Next.tsx
+│   │
+│   ├── lists/              # Kanban-style lists
+│   │   └── Lists.tsx
+│   │
+│   ├── memos/              # Embedded Memos iframe
+│   │   └── Memos.tsx
+│   │
+│   ├── daylight/           # Sun/moon screensaver
+│   │   ├── Daylight.tsx
+│   │   ├── DaylightContext.tsx
+│   │   ├── DaylightDebugPanel.tsx
+│   │   ├── THEMES.md           # Visual theme reference
+│   │   ├── themes-preview.svg  # Generated theme swatches
+│   │   ├── utils/
+│   │   │   └── themeConfigV2.ts  # 55+ color themes
+│   │   └── scripts/
+│   │       └── generate-themes-svg.js
+│   │
+│   └── shared/             # Reusable components
+│       ├── Navigation.tsx
+│       ├── DayWeek.tsx
+│       └── ServerStatus.tsx
+│
+├── hooks/                  # Custom React hooks
+│   └── useListReorder.ts
+│
+├── constants/              # App constants
+│   └── ...
+│
+└── utils/                  # Additional utilities
+    └── ...
 ```
 
-## Key Features
+## Features
 
-- **CSS Modules**: All styles are locally scoped (`.module.css`)
-- **Hot Module Replacement**: Changes reflect instantly
-- **Type Safety**: Full TypeScript coverage
+### Work Mode
+
+Access `?mode=work` to use a privacy-focused mode that only shows work-related tasks and hides personal data. Useful for work laptops.
+
+### Daylight Themes
+
+The Daylight component includes 55+ color themes across 11 time phases. To regenerate the theme preview after editing themes:
+
+```bash
+npm run generate:themes
+```
+
+This creates `src/components/daylight/themes-preview.svg` and updates `THEMES.md`.
 
 ## Build
 
@@ -47,10 +111,17 @@ pnpm run build    # Production build → dist/
 pnpm run preview  # Preview production build
 ```
 
-## Theme Management
+## Type Definitions
 
-When you update `src/components/daylight/utils/themeConfigV2.ts`, run this command to regenerate the `THEMES.md` preview:
+All shared types are in `src/types.ts`:
 
-```bash
-npm run generate:themes
-```
+| Type | Description |
+|------|-------------|
+| `Habit` | Habit definition (name, order, defaultTime, active, comment) |
+| `HabitEntry` | Habit entry for a date (state: 1=done, 2=failed, 3=exception) |
+| `Task` | Todo item (text, date, category, state, order) |
+| `Question` | Journal prompt |
+| `DiaryEntry` | Journal answer |
+| `List` / `ListItem` | List containers and their items |
+| `Note` | Ideas card (used in Grow/Next) |
+| `Vlog` | Weekly video reflection |
