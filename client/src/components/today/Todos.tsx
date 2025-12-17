@@ -862,7 +862,7 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
     const segments = [];
 
     if (active > 0) {
-      segments.push({ path: createArc(currentAngle, currentAngle + activeAngle), color: 'rgba(255, 255, 255, 0.5)' });
+      segments.push({ path: createArc(currentAngle, currentAngle + activeAngle), color: 'rgba(255, 255, 255, 0)' });
       currentAngle += activeAngle;
     }
     if (completed > 0) {

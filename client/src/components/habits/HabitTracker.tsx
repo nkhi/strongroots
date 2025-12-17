@@ -535,7 +535,7 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
                             {DateUtility.getDayName(week.start)} {DateUtility.getDayNumber(week.start)} - {DateUtility.getDayName(week.end)} {DateUtility.getDayNumber(week.end)}
                           </span>
                         </div>
-                        {hasVlog && <VideoCameraIcon size={16} weight="duotone" color="#8b5cf6" />}
+                        {hasVlog && <VideoCameraIcon size={16} weight="duotone" color="#d5c4fbff" />}
                       </div>
                     </th>
                   );
