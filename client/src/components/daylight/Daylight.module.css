@@ -101,6 +101,12 @@
     position: relative; /* Needed for absolute positioned marker container */
 }
 
+/* Enlarged horizon when sentence text is hidden */
+.horizonEnlarged {
+    transform: scale(1.2);
+    transform-origin: center bottom;
+}
+
 /* Container for hour markers - positioned to match horizonSkyWrap but without overflow clipping */
 .markerContainer {
     position: absolute;

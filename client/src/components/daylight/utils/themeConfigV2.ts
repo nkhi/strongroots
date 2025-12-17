@@ -65,7 +65,7 @@ export const THEME_COLORS_V2: Record<ThemeNameV2, ThemeColors[]> = {
         { id: 'dawn-6', background: '#2e1065', text: '#ffd700' }, // Synthwave
         { id: 'dawn-7', background: '#1a1a25', text: '#79c0ff' }, // Blade Runner
         { id: 'dawn-8', background: '#e8d6cf', text: '#7b2d26' }, // Ghibli
-        { id: 'dawn-9', background: '#3d1a50', text: '#ffd700' }, // Outrun
+        // { id: 'dawn-9', background: '#3d1a50', text: '#ffd700' }, // Outrun
         { id: 'dawn-10', background: '#fad6a5', text: '#8b4513' } // Wes Anderson
     ],
     sunrise: [
@@ -75,7 +75,7 @@ export const THEME_COLORS_V2: Record<ThemeNameV2, ThemeColors[]> = {
         { id: 'sunrise-4', background: '#eff6ff', text: '#1e40af' }, // Morning Blue
         { id: 'sunrise-5', background: '#ffcc00', text: '#cc0000' }, // Pixel Sun
         { id: 'sunrise-6', background: '#ff6b35', text: '#1a0533' }, // Synthwave
-        { id: 'sunrise-7', background: '#2d2d3d', text: '#ffa657' }, // Blade Runner
+        // { id: 'sunrise-7', background: '#2d2d3d', text: '#ffa657' }, // Blade Runner
         { id: 'sunrise-8', background: '#ffeaa7', text: '#d35400' }, // Ghibli
         { id: 'sunrise-9', background: '#ff4500', text: '#ffffff' }, // Outrun
         { id: 'sunrise-10', background: '#f8b500', text: '#a52a2a' } // Wes Anderson
@@ -86,10 +86,10 @@ export const THEME_COLORS_V2: Record<ThemeNameV2, ThemeColors[]> = {
         { id: 'morning-3', background: '#fafafa', text: '#525252' }, // Cotton
         { id: 'morning-4', background: '#fffbeb', text: '#b45309' }, // Paper
         { id: 'morning-5', background: '#9bbc0f', text: '#306230' }, // Gameboy Light
-        { id: 'morning-6', background: '#ff9500', text: '#2a0845' }, // Synthwave
-        { id: 'morning-7', background: '#3d3d4d', text: '#adbac7' }, // Blade Runner
+        // { id: 'morning-6', background: '#ff9500', text: '#2a0845' }, // Synthwave
+        // { id: 'morning-7', background: '#3d3d4d', text: '#adbac7' }, // Blade Runner
         { id: 'morning-8', background: '#dfe6e9', text: '#2d3436' }, // Ghibli
-        { id: 'morning-9', background: '#ff6b35', text: '#0d0019' }, // Outrun
+        // { id: 'morning-9', background: '#ff6b35', text: '#0d0019' }, // Outrun
         { id: 'morning-10', background: '#fef3c7', text: '#d35400' } // Wes Anderson
     ],
     noon: [
@@ -99,9 +99,9 @@ export const THEME_COLORS_V2: Record<ThemeNameV2, ThemeColors[]> = {
         { id: 'noon-4', background: '#f8fafc', text: '#334155' }, // Glacial
         { id: 'noon-5', background: '#eff6ff', text: '#3b82f6' }, // Cerulean
         { id: 'noon-6', background: '#ffecd2', text: '#be3455' }, // Synthwave
-        { id: 'noon-7', background: '#4d4d5d', text: '#f0f6fc' }, // Blade Runner
+        // { id: 'noon-7', background: '#4d4d5d', text: '#f0f6fc' }, // Blade Runner
         { id: 'noon-8', background: '#f5f6fa', text: '#353b48' }, // Ghibli
-        { id: 'noon-9', background: '#ff8c42', text: '#1a0033' }, // Outrun
+        // { id: 'noon-9', background: '#ff8c42', text: '#1a0033' }, // Outrun
         { id: 'noon-10', background: '#fff9e6', text: '#5d4037' } // Wes Anderson
     ],
     afternoon: [
@@ -111,9 +111,9 @@ export const THEME_COLORS_V2: Record<ThemeNameV2, ThemeColors[]> = {
         { id: 'afternoon-4', background: '#f5f5f5', text: '#3e2723' }, // Espresso
         { id: 'afternoon-5', background: '#dcfce7', text: '#166534' }, // Matcha
         { id: 'afternoon-6', background: '#ffb7b2', text: '#6b2d5c' }, // Synthwave
-        { id: 'afternoon-7', background: '#3a3a4a', text: '#d4a373' }, // Blade Runner
+        // { id: 'afternoon-7', background: '#3a3a4a', text: '#d4a373' }, // Blade Runner
         { id: 'afternoon-8', background: '#ffefd5', text: '#6b4423' }, // Ghibli
-        { id: 'afternoon-9', background: '#e85d04', text: '#15002b' }, // Outrun
+        // { id: 'afternoon-9', background: '#e85d04', text: '#15002b' }, // Outrun
         { id: 'afternoon-10', background: '#e6d3b3', text: '#6d4c41' } // Wes Anderson
     ],
     goldenHour: [

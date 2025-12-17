@@ -8,6 +8,9 @@ import { getLineConfig, isDayPhase, type LineMarker } from './utils/lineConfig';
 
 import { SunDim, Moon, MoonStars, Circle } from '@phosphor-icons/react';
 
+// Toggle to show/hide the sentence text below the horizon
+const SHOW_SENTENCE_TEXT = false;
+
 interface DaylightProps {
     apiBaseUrl?: string;
     workMode?: boolean;
@@ -242,7 +245,7 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: Daylight
         <div className={`${styles.container} ${themeClass}`} style={containerStyle}>
             <div className={styles.contentWrapper}>
                 {/* Main Horizon Area */}
-                <div className={styles.horizon}>
+                <div className={`${styles.horizon} ${!SHOW_SENTENCE_TEXT ? styles.horizonEnlarged : ''}`}>
                     <div className={styles.horizonSky} aria-hidden="true">
                         <div className={styles.horizonSkyWrap}>
                             <span
@@ -281,12 +284,13 @@ export function Daylight({ apiBaseUrl: _apiBaseUrl, workMode = false }: Daylight
                     </div>
                 </div>
 
-                {/* Sentence */}
-                {/* Dangerously setting HTML because the formatted string contains spans/bold */}
-                <p
-                    className={styles.text}
-                    dangerouslySetInnerHTML={{ __html: sentenceHtml }}
-                />
+                {/* Sentence - controlled by SHOW_SENTENCE_TEXT constant */}
+                {SHOW_SENTENCE_TEXT && (
+                    <p
+                        className={styles.text}
+                        dangerouslySetInnerHTML={{ __html: sentenceHtml }}
+                    />
+                )}
             </div>
             <DaylightDebugPanel />
         </div>
