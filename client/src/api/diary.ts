@@ -1,13 +1,14 @@
 import type { Question, DiaryEntry, DiaryByQuestion } from '../types';
+import { fetchWithErrorReporting } from './errorReporter';
 
 export async function getQuestions(baseUrl: string): Promise<Question[]> {
-  const response = await fetch(`${baseUrl}/questions`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/questions`);
   if (!response.ok) throw new Error('Failed to fetch questions');
   return response.json();
 }
 
 export async function saveQuestion(baseUrl: string, question: Question): Promise<void> {
-  const response = await fetch(`${baseUrl}/questions`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/questions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(question)
@@ -16,13 +17,13 @@ export async function saveQuestion(baseUrl: string, question: Question): Promise
 }
 
 export async function getDiary(baseUrl: string): Promise<Record<string, DiaryEntry[]>> {
-  const response = await fetch(`${baseUrl}/diary`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/diary`);
   if (!response.ok) throw new Error('Failed to fetch diary');
   return response.json();
 }
 
 export async function createDiaryEntry(baseUrl: string, entry: DiaryEntry): Promise<void> {
-  const response = await fetch(`${baseUrl}/diary-entries`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/diary-entries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(entry)
@@ -31,7 +32,7 @@ export async function createDiaryEntry(baseUrl: string, entry: DiaryEntry): Prom
 }
 
 export async function saveDiaryEntry(baseUrl: string, entry: DiaryEntry): Promise<void> {
-  const response = await fetch(`${baseUrl}/diary-entries`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/diary-entries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(entry)
@@ -40,7 +41,7 @@ export async function saveDiaryEntry(baseUrl: string, entry: DiaryEntry): Promis
 }
 
 export async function updateDiaryEntry(baseUrl: string, id: string, updates: Partial<DiaryEntry>): Promise<DiaryEntry> {
-  const response = await fetch(`${baseUrl}/diary-entries/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/diary-entries/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -50,7 +51,7 @@ export async function updateDiaryEntry(baseUrl: string, id: string, updates: Par
 }
 
 export async function deleteDiaryEntry(baseUrl: string, id: string): Promise<void> {
-  const response = await fetch(`${baseUrl}/diary-entries/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/diary-entries/${id}`, {
     method: 'DELETE'
   });
   if (!response.ok) throw new Error('Failed to delete diary entry');

@@ -79,8 +79,8 @@ export const Next: React.FC<NextProps> = ({ apiBaseUrl }) => {
                 {notes.map((note) => (
                     <div
                         key={note.id}
-                        className={`${styles.noteCard} ${styles[note.size]}`}
-                        style={{ backgroundColor: note.color }}
+                        className={`${styles.noteCard} ${note.size ? styles[note.size as 'small' | 'medium' | 'large' | 'wide' | 'tall'] : ''}`}
+                        style={{ backgroundColor: note.color || undefined }}
                     >
                         <input
                             className={styles.noteTitleInput}
@@ -91,7 +91,7 @@ export const Next: React.FC<NextProps> = ({ apiBaseUrl }) => {
                         />
                         <textarea
                             className={styles.noteContentInput}
-                            value={note.content}
+                            value={note.content || ''}
                             placeholder="Take a note..."
                             onChange={(e) => setNotes(prev => prev.map(n => n.id === note.id ? { ...n, content: e.target.value } : n))}
                             onBlur={(e) => updateNote(note.id, { content: e.target.value })}

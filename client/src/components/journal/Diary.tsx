@@ -209,7 +209,7 @@ export function Diary({ apiBaseUrl }: DiaryProps) {
                   // oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"'
                   className={styles.diaryAnswerArea}
                   placeholder="Write your answer here..."
-                  value={answer}
+                  value={answer || ''}
                   onChange={(e) => handleAnswerChange(dateStr, question.id, e.target.value)}
                 />
               </div>

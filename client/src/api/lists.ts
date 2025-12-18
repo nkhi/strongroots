@@ -1,13 +1,14 @@
 import type { List } from '../types';
+import { fetchWithErrorReporting } from './errorReporter';
 
 export async function getLists(baseUrl: string): Promise<List[]> {
-  const response = await fetch(`${baseUrl}/lists`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/lists`);
   if (!response.ok) throw new Error('Failed to fetch lists');
   return response.json();
 }
 
 export async function createList(baseUrl: string, list: Partial<List>): Promise<List> {
-  const response = await fetch(`${baseUrl}/lists`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/lists`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(list)
@@ -17,7 +18,7 @@ export async function createList(baseUrl: string, list: Partial<List>): Promise<
 }
 
 export async function updateList(baseUrl: string, id: string, updates: Partial<List>): Promise<List> {
-  const response = await fetch(`${baseUrl}/lists/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/lists/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -27,7 +28,7 @@ export async function updateList(baseUrl: string, id: string, updates: Partial<L
 }
 
 export async function deleteList(baseUrl: string, id: string): Promise<void> {
-  const response = await fetch(`${baseUrl}/lists/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/lists/${id}`, {
     method: 'DELETE'
   });
   if (!response.ok) throw new Error('Failed to delete list');
@@ -35,7 +36,7 @@ export async function deleteList(baseUrl: string, id: string): Promise<void> {
 
 // Reorder a list (update order only)
 export async function reorderList(baseUrl: string, id: string, order: string): Promise<List> {
-  const response = await fetch(`${baseUrl}/lists/${id}/reorder`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/lists/${id}/reorder`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ order })

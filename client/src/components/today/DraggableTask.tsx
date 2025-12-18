@@ -1,7 +1,21 @@
 /**
  * DraggableTask Component
  * 
- * Wraps a task item to make it draggable using @dnd-kit.
+ * A wrapper component that makes a task item draggable using @dnd-kit.
+ * This is the ONLY component used for making tasks draggable.
+ * 
+ * ## Features:
+ * - Sortable with proper transform handling
+ * - Visual feedback during drag
+ * - Touch-friendly with proper touch-action
+ * - Optional disabled state
+ * 
+ * ## Usage:
+ * ```tsx
+ * <DraggableTask task={task}>
+ *   <TaskItemContent task={task} />
+ * </DraggableTask>
+ * ```
  */
 
 import React from 'react';
@@ -10,14 +24,26 @@ import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '../../types';
 import styles from './Todos.module.css';
 
-interface DraggableTaskProps {
+// ============================================
+// Types
+// ============================================
+
+export interface DraggableTaskProps {
+    /** The task data */
     task: Task;
-    dateStr: string;
+
+    /** Content to render inside the draggable wrapper */
     children: React.ReactNode;
+
+    /** Whether dragging is disabled for this task */
     disabled?: boolean;
 }
 
-export function DraggableTask({ task, dateStr, children, disabled = false }: DraggableTaskProps) {
+// ============================================
+// Component
+// ============================================
+
+export function DraggableTask({ task, children, disabled = false }: DraggableTaskProps) {
     const {
         attributes,
         listeners,
@@ -25,12 +51,12 @@ export function DraggableTask({ task, dateStr, children, disabled = false }: Dra
         transform,
         transition,
         isDragging,
+        isSorting,
     } = useSortable({
         id: task.id,
         data: {
             type: 'task',
             task,
-            dateStr,
         },
         disabled,
     });
@@ -39,15 +65,20 @@ export function DraggableTask({ task, dateStr, children, disabled = false }: Dra
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
-        cursor: disabled ? 'default' : 'grab',
+        cursor: disabled ? 'default' : isDragging ? 'grabbing' : 'grab',
         touchAction: 'none',
+        zIndex: isDragging ? 1000 : undefined,
     };
 
     return (
         <div
             ref={setNodeRef}
             style={style}
-            className={`${styles.draggableTask} ${isDragging ? styles.dragging : ''}`}
+            className={`
+        ${styles.draggableTask}
+        ${isDragging ? styles.dragging : ''}
+        ${isSorting ? styles.sorting : ''}
+      `.trim()}
             {...attributes}
             {...listeners}
         >
@@ -56,20 +87,28 @@ export function DraggableTask({ task, dateStr, children, disabled = false }: Dra
     );
 }
 
+// ============================================
+// Drag Overlay Component
+// ============================================
+
+export interface TaskDragOverlayProps {
+    /** The task being dragged */
+    task: Task;
+
+    /** Render function to display the task content */
+    children: React.ReactNode;
+}
+
 /**
  * TaskDragOverlay Component
  * 
- * Renders the overlay shown while dragging a task.
+ * Renders the floating overlay shown while dragging a task.
+ * Should be used inside DndContext's <DragOverlay> component.
  */
-interface TaskDragOverlayProps {
-    task: Task;
-    renderContent: (task: Task) => React.ReactNode;
-}
-
-export function TaskDragOverlay({ task, renderContent }: TaskDragOverlayProps) {
+export function TaskDragOverlay({ children }: TaskDragOverlayProps) {
     return (
         <div className={styles.taskDragOverlay}>
-            {renderContent(task)}
+            {children}
         </div>
     );
 }

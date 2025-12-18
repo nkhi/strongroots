@@ -1,13 +1,14 @@
 import type { Note } from '../types';
+import { fetchWithErrorReporting } from './errorReporter';
 
 export async function getNotes(baseUrl: string): Promise<Note[]> {
-  const response = await fetch(`${baseUrl}/next`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/next`);
   if (!response.ok) throw new Error('Failed to fetch notes');
   return response.json();
 }
 
 export async function createNote(baseUrl: string, note: Partial<Note>): Promise<Note> {
-  const response = await fetch(`${baseUrl}/next`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/next`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(note)
@@ -17,7 +18,7 @@ export async function createNote(baseUrl: string, note: Partial<Note>): Promise<
 }
 
 export async function updateNote(baseUrl: string, id: string, updates: Partial<Note>): Promise<Note> {
-  const response = await fetch(`${baseUrl}/next/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/next/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)

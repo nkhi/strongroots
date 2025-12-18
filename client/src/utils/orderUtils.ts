@@ -110,6 +110,6 @@ export function sortByOrder<T extends { order?: string | null }>(items: T[]): T[
     if (!a.order && !b.order) return 0;
     if (!a.order) return 1;
     if (!b.order) return -1;
-    return a.order.localeCompare(b.order);
+    return a.order < b.order ? -1 : (a.order > b.order ? 1 : 0);
   });
 }

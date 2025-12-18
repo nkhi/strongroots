@@ -1,4 +1,5 @@
 import type { Task } from '../types';
+import { fetchWithErrorReporting } from './errorReporter';
 
 export type GroupedTasks = Record<string, {
   active: Task[];
@@ -7,19 +8,19 @@ export type GroupedTasks = Record<string, {
 }>;
 
 export async function getTasks(baseUrl: string): Promise<Record<string, Task[]>> {
-  const response = await fetch(`${baseUrl}/tasks`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks`);
   if (!response.ok) throw new Error('Failed to fetch tasks');
   return response.json();
 }
 
 export async function getWorkTasks(baseUrl: string): Promise<Record<string, Task[]>> {
-  const response = await fetch(`${baseUrl}/tasks/work`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/work`);
   if (!response.ok) throw new Error('Failed to fetch work tasks');
   return response.json();
 }
 
 export async function getTasksForWeek(baseUrl: string, start: string, end: string): Promise<Record<string, Task[]>> {
-  const response = await fetch(`${baseUrl}/tasks/week?start=${start}&end=${end}`);
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/week?start=${start}&end=${end}`);
   if (!response.ok) throw new Error('Failed to fetch tasks for week');
   return response.json();
 }
@@ -28,7 +29,7 @@ export async function getGroupedTasks(baseUrl: string, category?: 'life' | 'work
   const url = category 
     ? `${baseUrl}/tasks/grouped?category=${category}`
     : `${baseUrl}/tasks/grouped`;
-  const response = await fetch(url);
+  const response = await fetchWithErrorReporting(url);
   if (!response.ok) throw new Error('Failed to fetch grouped tasks');
   return response.json();
 }
@@ -43,13 +44,13 @@ export async function getTaskCounts(baseUrl: string, category?: 'life' | 'work')
   const url = category 
     ? `${baseUrl}/tasks/counts?category=${category}`
     : `${baseUrl}/tasks/counts`;
-  const response = await fetch(url);
+  const response = await fetchWithErrorReporting(url);
   if (!response.ok) throw new Error('Failed to fetch task counts');
   return response.json();
 }
 
 export async function createTask(baseUrl: string, task: Task): Promise<void> {
-  const response = await fetch(`${baseUrl}/tasks`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(task)
@@ -58,7 +59,7 @@ export async function createTask(baseUrl: string, task: Task): Promise<void> {
 }
 
 export async function updateTask(baseUrl: string, id: string, updates: Partial<Task>): Promise<Task> {
-  const response = await fetch(`${baseUrl}/tasks/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates)
@@ -68,7 +69,7 @@ export async function updateTask(baseUrl: string, id: string, updates: Partial<T
 }
 
 export async function deleteTask(baseUrl: string, id: string): Promise<void> {
-  const response = await fetch(`${baseUrl}/tasks/${id}`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/${id}`, {
     method: 'DELETE'
   });
   if (!response.ok) throw new Error('Failed to delete task');
@@ -80,7 +81,7 @@ export async function batchPuntTasks(
   sourceDate: string, 
   targetDate: string
 ): Promise<{ ok: boolean; newTasks: Task[] }> {
-  const response = await fetch(`${baseUrl}/tasks/batch/punt`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/batch/punt`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ taskIds, sourceDate, targetDate })
@@ -90,7 +91,7 @@ export async function batchPuntTasks(
 }
 
 export async function batchFailTasks(baseUrl: string, taskIds: string[]): Promise<void> {
-  const response = await fetch(`${baseUrl}/tasks/batch/fail`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/batch/fail`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ taskIds })
@@ -105,7 +106,7 @@ export async function reorderTask(
   order: string,
   options?: { date?: string; category?: 'life' | 'work'; state?: 'active' | 'completed' | 'failed' }
 ): Promise<Task> {
-  const response = await fetch(`${baseUrl}/tasks/${id}/reorder`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/${id}/reorder`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ order, ...options })
@@ -124,7 +125,7 @@ export interface ReorderMove {
 }
 
 export async function batchReorderTasks(baseUrl: string, moves: ReorderMove[]): Promise<void> {
-  const response = await fetch(`${baseUrl}/tasks/batch/reorder`, {
+  const response = await fetchWithErrorReporting(`${baseUrl}/tasks/batch/reorder`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ moves })

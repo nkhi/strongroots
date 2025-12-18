@@ -1,0 +1,99 @@
+.toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(30, 30, 32, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  cursor: pointer;
+  
+  /* Entry animation */
+  animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: right center;
+}
+
+.toast:hover {
+  background: rgba(38, 38, 42, 0.98);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.toast:active {
+  transform: scale(0.98);
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(12px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  color: #f87171;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.code {
+  color: #f87171;
+  font-weight: 500;
+}
+
+.separator {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.route {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message {
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 2px;
+}
