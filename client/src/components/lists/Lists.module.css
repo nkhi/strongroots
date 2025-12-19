@@ -13,18 +13,18 @@
   min-width: 320px;
   width: 320px;
   /* background: #151515; Removed to allow inline style */
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 150px);
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  max-height: calc(100vh - 120px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .listColumn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .listHeader {

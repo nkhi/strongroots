@@ -33,7 +33,7 @@ export const WORK_MODE_LINES: LineConfig = {
     ],
     night: [
         { hour: 23, label: '11:00 PM', id: 'sleep-time' },
-        { hour: 7, label: '7:00 AM', id: 'wake-time' },
+        { hour: 6, label: '6:00 AM', id: 'wake-time' },
     ],
 };
 
@@ -46,7 +46,7 @@ export const REGULAR_MODE_LINES: LineConfig = {
     day: [],
     night: [
         { hour: 23, label: '11:00 PM', id: 'sleep-time' },
-        { hour: 7, label: '7:00 AM', id: 'wake-time' },
+        { hour: 6, label: '6:00 AM', id: 'wake-time' },
     ],
 };
 
