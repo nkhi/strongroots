@@ -192,7 +192,7 @@ export function DayWeek({
           title="Task Graveyard"
         >
           <Ghost
-            weight={isGraveyardOpen ? 'fill' : 'duotone'}
+            weight="duotone"
             size={20}
           />
           <span>Grave</span>

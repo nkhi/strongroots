@@ -4,8 +4,8 @@
   bottom: 24px;
   right: 24px;
   width: 280px;
-  max-height: 400px;
-  background: rgba(20, 20, 25, 0.95);
+  max-height: calc(100vh - 100px);
+  background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
@@ -43,14 +43,28 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Task list */
+/* Task list - uses grid to give Life/Work equal space */
 .graveyardList {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 32px 10px 10px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto 1fr; /* header, tasks, divider, tasks */
   gap: 2px;
+  min-height: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-radius: 8px;
+}
+
+/* When only one category, no grid needed */
+.graveyardList:has(.categorySection:only-child) {
+  grid-template-rows: 1fr;
+}
+
+/* Drop target state */
+.graveyardList.dropTarget {
+  background: rgba(139, 92, 246, 0.08);
+  box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.1);
 }
 
 /* Empty state */
@@ -147,6 +161,8 @@
 .categorySection {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .categoryHeader {
@@ -201,6 +217,9 @@
   flex-direction: column;
   gap: 1px;
   padding-left: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
 }
 
 /* Divider */

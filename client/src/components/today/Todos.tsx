@@ -424,10 +424,14 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
     activeTask,
     handlers,
     isDropTarget,
+    isOverGraveyard,
   } = useTaskDragAndDrop({
     tasks,
+    graveyardTasks,
     onReorder: handleReorder,
     onOptimisticUpdate: handleOptimisticUpdate,
+    onGraveyard: sendToGraveyard,
+    onResurrect: resurrectFromGraveyard,
     onError: handleDndError,
   });
 
@@ -994,7 +998,7 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
                     }}
                     title="Graveyard All"
                   >
-                    <Ghost size={14} />
+                    <Ghost size={14} weight="duotone" />
                   </button>
                 </div>
               )}
@@ -1197,13 +1201,14 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
         className={styles.todosScrollContainer}
         columnClassName={styles.todoColumn}
         onMoreClick={() => setViewMode('week')}
-        moreOverride="Week View"
+        moreOverride="Week"
         onGraveyardClick={() => setIsGraveyardOpen(prev => !prev)}
         isGraveyardOpen={isGraveyardOpen}
       />
       <Graveyard
         isOpen={isGraveyardOpen}
         tasks={graveyardTasks}
+        isOverGraveyard={isOverGraveyard}
         onClose={() => setIsGraveyardOpen(false)}
         onResurrect={resurrectFromGraveyard}
         onDelete={deleteGraveyardTask}

@@ -1,12 +1,16 @@
 import { useRef, useState } from 'react';
-import { Calendar, Trash, X, Ghost, CaretDown, Heart, Briefcase } from '@phosphor-icons/react';
+import { useDroppable } from '@dnd-kit/core';
+import { Calendar, Trash, X, Ghost, CaretDown } from '@phosphor-icons/react';
 import { DateUtility } from '../../utils';
 import type { Task } from '../../types';
+import { GRAVEYARD_CONTAINER_ID } from '../../hooks/useTaskDragAndDrop';
+import { DraggableTask } from './DraggableTask';
 import styles from './Graveyard.module.css';
 
 interface GraveyardProps {
     isOpen: boolean;
     tasks: Task[];
+    isOverGraveyard?: boolean;
     onClose: () => void;
     onResurrect: (taskId: string, targetDate: string) => void;
     onDelete: (taskId: string) => void;
@@ -15,10 +19,18 @@ interface GraveyardProps {
 /**
  * Graveyard Panel - Compact side panel for graveyarded tasks.
  * Tasks are grouped by category (life/work) with collapsible accordions.
+ * Now acts as a droppable target for drag-and-drop.
  */
-export function Graveyard({ isOpen, tasks, onClose, onResurrect, onDelete }: GraveyardProps) {
+export function Graveyard({ isOpen, tasks, isOverGraveyard = false, onClose, onResurrect, onDelete }: GraveyardProps) {
     const [lifeExpanded, setLifeExpanded] = useState(true);
     const [workExpanded, setWorkExpanded] = useState(true);
+
+    // Make this panel a droppable target
+    const { setNodeRef, isOver } = useDroppable({
+        id: GRAVEYARD_CONTAINER_ID,
+    });
+
+    const showDropIndicator = isOverGraveyard || isOver;
 
     const lifeTasks = tasks.filter(t => t.category !== 'work');
     const workTasks = tasks.filter(t => t.category === 'work');
@@ -30,11 +42,16 @@ export function Graveyard({ isOpen, tasks, onClose, onResurrect, onDelete }: Gra
                 <X size={14} />
             </button>
 
-            <div className={styles.graveyardList}>
+            <div
+                ref={setNodeRef}
+                className={`${styles.graveyardList} ${showDropIndicator ? styles.dropTarget : ''}`}
+            >
                 {tasks.length === 0 ? (
                     <div className={styles.graveyardEmpty}>
                         <Ghost size={32} weight="duotone" className={styles.graveyardEmptyIcon} />
-                        <span className={styles.graveyardEmptyText}>No tasks</span>
+                        <span className={styles.graveyardEmptyText}>
+                            {showDropIndicator ? 'Drop here to shelve' : 'No tasks'}
+                        </span>
                     </div>
                 ) : (
                     <>
@@ -56,12 +73,13 @@ export function Graveyard({ isOpen, tasks, onClose, onResurrect, onDelete }: Gra
                                 {lifeExpanded && (
                                     <div className={styles.categoryTasks}>
                                         {lifeTasks.map(task => (
-                                            <GraveyardTask
-                                                key={task.id}
-                                                task={task}
-                                                onResurrect={onResurrect}
-                                                onDelete={onDelete}
-                                            />
+                                            <DraggableTask key={task.id} task={task}>
+                                                <GraveyardTask
+                                                    task={task}
+                                                    onResurrect={onResurrect}
+                                                    onDelete={onDelete}
+                                                />
+                                            </DraggableTask>
                                         ))}
                                     </div>
                                 )}
@@ -91,12 +109,13 @@ export function Graveyard({ isOpen, tasks, onClose, onResurrect, onDelete }: Gra
                                 {workExpanded && (
                                     <div className={styles.categoryTasks}>
                                         {workTasks.map(task => (
-                                            <GraveyardTask
-                                                key={task.id}
-                                                task={task}
-                                                onResurrect={onResurrect}
-                                                onDelete={onDelete}
-                                            />
+                                            <DraggableTask key={task.id} task={task}>
+                                                <GraveyardTask
+                                                    task={task}
+                                                    onResurrect={onResurrect}
+                                                    onDelete={onDelete}
+                                                />
+                                            </DraggableTask>
                                         ))}
                                     </div>
                                 )}

@@ -55,6 +55,9 @@ export type TaskCategory = 'life' | 'work';
 /** Task state type */
 export type TaskState = 'active' | 'completed' | 'failed';
 
+/** Special container ID for graveyard */
+export const GRAVEYARD_CONTAINER_ID = 'graveyard';
+
 /** Information about the source of a drag operation */
 export interface DragSource {
   taskId: string;
@@ -95,11 +98,20 @@ export interface UseTaskDragAndDropOptions {
   /** Current tasks state, keyed by date */
   tasks: Record<string, Task[]>;
   
+  /** Graveyard tasks */
+  graveyardTasks?: Task[];
+  
   /** Callback to persist reorder to server */
   onReorder: (taskId: string, newOrder: string, options?: ReorderOptions) => Promise<void>;
   
   /** Callback for optimistic updates */
   onOptimisticUpdate: (updater: TasksUpdater) => void;
+  
+  /** Callback when task is dropped on graveyard */
+  onGraveyard?: (taskId: string, sourceDate: string) => Promise<void>;
+  
+  /** Callback when graveyard task is dropped on a date */
+  onResurrect?: (taskId: string, targetDate: string) => Promise<void>;
   
   /** Callback to reload tasks on error */
   onError?: () => void;
@@ -121,6 +133,9 @@ export interface UseTaskDragAndDropReturn {
   
   /** Currently hovered drop target */
   overTarget: DropTargetInfo | null;
+  
+  /** Whether currently dragging over graveyard */
+  isOverGraveyard: boolean;
   
   /** Event handlers for DndContext */
   handlers: {
@@ -248,8 +263,11 @@ export function calculateNewOrder(
 export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskDragAndDropReturn {
   const {
     tasks,
+    graveyardTasks = [],
     onReorder,
     onOptimisticUpdate,
+    onGraveyard,
+    onResurrect,
     onError,
     activationDistance = 8,
   } = options;
@@ -258,6 +276,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [dragSource, setDragSource] = useState<DragSource | null>(null);
   const [overTarget, setOverTarget] = useState<DropTargetInfo | null>(null);
+  const [isOverGraveyard, setIsOverGraveyard] = useState(false);
   
   // Ref to track if we're in the middle of a drag
   const isDraggingRef = useRef(false);
@@ -291,9 +310,17 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
   }, [tasks]);
   
   /**
-   * Find a task across all dates
+   * Find a task across all dates or graveyard.
+   * Returns isFromGraveyard = true if found in graveyard.
    */
-  const findTask = useCallback((taskId: string): { task: Task; dateStr: string } | null => {
+  const findTask = useCallback((taskId: string): { task: Task; dateStr: string; isFromGraveyard?: boolean } | null => {
+    // First check graveyard tasks
+    const graveyardTask = graveyardTasks.find(t => t.id === taskId);
+    if (graveyardTask) {
+      return { task: graveyardTask, dateStr: '', isFromGraveyard: true };
+    }
+    
+    // Then check regular date-based tasks
     for (const [dateStr, dayTasks] of Object.entries(tasks)) {
       const task = dayTasks.find(t => t.id === taskId);
       if (task) {
@@ -301,7 +328,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       }
     }
     return null;
-  }, [tasks]);
+  }, [tasks, graveyardTasks]);
   
   /**
    * Check if a container is the current drop target
@@ -332,20 +359,23 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       return;
     }
     
-    const { task, dateStr } = found;
+    const { task, dateStr, isFromGraveyard } = found;
     const category = getTaskCategory(task);
     const state = getTaskState(task);
     
     // Find original index in container
-    const containerTasks = getTasksForContainer(dateStr, category, state);
-    const sortedTasks = sortByOrder(containerTasks);
-    const originalIndex = sortedTasks.findIndex(t => t.id === taskId);
+    let originalIndex = 0;
+    if (!isFromGraveyard) {
+      const containerTasks = getTasksForContainer(dateStr, category, state);
+      const sortedTasks = sortByOrder(containerTasks);
+      originalIndex = sortedTasks.findIndex(t => t.id === taskId);
+    }
     
     isDraggingRef.current = true;
     setActiveTask(task);
     setDragSource({
       taskId,
-      dateStr,
+      dateStr: isFromGraveyard ? GRAVEYARD_CONTAINER_ID : dateStr,
       category,
       state,
       originalIndex,
@@ -357,20 +387,38 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     
     if (!over) {
       setOverTarget(null);
+      setIsOverGraveyard(false);
       return;
     }
     
     const overId = String(over.id);
     
-    // First try to parse as container ID
+    // Check if dropping on graveyard
+    if (overId === GRAVEYARD_CONTAINER_ID) {
+      setOverTarget(null);
+      setIsOverGraveyard(true);
+      return;
+    }
+    
+    // Check if dropping on a graveyard task
+    const found = findTask(overId);
+    if (found?.isFromGraveyard) {
+      setOverTarget(null);
+      setIsOverGraveyard(true);
+      return;
+    }
+    
+    // Otherwise, reset graveyard state
+    setIsOverGraveyard(false);
+    
+    // Try to parse as container ID
     const containerInfo = parseContainerId(overId);
     if (containerInfo) {
       setOverTarget(containerInfo);
       return;
     }
     
-    // Otherwise, it's a task ID - find its container
-    const found = findTask(overId);
+    // It's a task ID - find its container
     if (found) {
       const { task, dateStr } = found;
       setOverTarget({
@@ -387,6 +435,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     // Reset state
     setActiveTask(null);
     setOverTarget(null);
+    setIsOverGraveyard(false);
     const source = dragSource;
     setDragSource(null);
     isDraggingRef.current = false;
@@ -401,6 +450,45 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     
     // Same item, no change
     if (taskId === overId) {
+      return;
+    }
+    
+    // Check if source is from graveyard
+    const isSourceGraveyard = source.dateStr === GRAVEYARD_CONTAINER_ID;
+    
+    // Check if target is graveyard
+    const isTargetGraveyard = overId === GRAVEYARD_CONTAINER_ID || 
+      (findTask(overId)?.isFromGraveyard ?? false);
+    
+    // Handle Day → Graveyard: call onGraveyard
+    if (!isSourceGraveyard && isTargetGraveyard && onGraveyard) {
+      await onGraveyard(taskId, source.dateStr);
+      return;
+    }
+    
+    // Handle Graveyard → Day: call onResurrect
+    if (isSourceGraveyard && !isTargetGraveyard && onResurrect) {
+      // Find target date from container or task
+      let targetDate: string | null = null;
+      
+      const containerInfo = parseContainerId(overId);
+      if (containerInfo) {
+        targetDate = containerInfo.dateStr;
+      } else {
+        const found = findTask(overId);
+        if (found && !found.isFromGraveyard) {
+          targetDate = found.dateStr;
+        }
+      }
+      
+      if (targetDate) {
+        await onResurrect(taskId, targetDate);
+      }
+      return;
+    }
+    
+    // If source is graveyard and target is also graveyard, do nothing
+    if (isSourceGraveyard && isTargetGraveyard) {
       return;
     }
     
@@ -510,12 +598,13 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       console.error('[DnD] Failed to reorder task:', error);
       onError?.();
     }
-  }, [dragSource, findTask, getTasksForContainer, onOptimisticUpdate, onReorder, onError]);
+  }, [dragSource, findTask, getTasksForContainer, onOptimisticUpdate, onReorder, onGraveyard, onResurrect, onError]);
   
   const handleDragCancel = useCallback(() => {
     setActiveTask(null);
     setDragSource(null);
     setOverTarget(null);
+    setIsOverGraveyard(false);
     isDraggingRef.current = false;
   }, []);
   
@@ -532,6 +621,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     activeTask,
     dragSource,
     overTarget,
+    isOverGraveyard,
     handlers,
     getTasksForContainer,
     isDropTarget,
