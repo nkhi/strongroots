@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Calendar, Trash, X, Ghost, CaretDown, SpinnerGap } from '@phosphor-icons/react';
+import { Calendar, Trash, X, Ghost, CaretDown, SpinnerGap, ArrowsCounterClockwise, SelectionForegroundIcon } from '@phosphor-icons/react';
 import { DateUtility } from '../../utils';
 import type { Task } from '../../types';
 import { GRAVEYARD_CONTAINER_ID } from '../../hooks/useTaskDragAndDrop';
@@ -35,6 +35,15 @@ export function Graveyard({
 }: GraveyardProps) {
     const [lifeExpanded, setLifeExpanded] = useState(true);
     const [workExpanded, setWorkExpanded] = useState(true);
+    const panelRef = useRef<HTMLDivElement>(null);
+
+    // Dragging state
+
+    // Dragging state
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); // Mouse start position
+    const [initialPos, setInitialPos] = useState({ x: 0, y: 0 }); // Element start position
 
     // Make this panel a droppable target
     const { setNodeRef, isOver } = useDroppable({
@@ -46,12 +55,116 @@ export function Graveyard({
     const lifeTasks = tasks.filter(t => t.category !== 'work');
     const workTasks = tasks.filter(t => t.category === 'work');
 
+    // Drag Logic
+    const handleMouseDown = (e: React.MouseEvent) => {
+        // Prevent drag if clicking on buttons
+        if ((e.target as HTMLElement).closest('button')) return;
+
+        setIsDragging(true);
+        setDragStart({ x: e.clientX, y: e.clientY });
+        setInitialPos({ ...position });
+        e.preventDefault();
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            const dx = e.clientX - dragStart.x;
+            const dy = e.clientY - dragStart.y;
+            setPosition({
+                x: initialPos.x + dx,
+                y: initialPos.y + dy
+            });
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+
+            // Bounds check & snap back
+            if (panelRef.current) {
+                const rect = panelRef.current.getBoundingClientRect();
+                const margin = 24; // Keep 24px padding from edges
+                const winW = window.innerWidth;
+                const winH = window.innerHeight;
+
+                let deltaX = 0;
+                let deltaY = 0;
+
+                // Horizontal bounds
+                if (rect.left < margin) {
+                    deltaX = margin - rect.left;
+                } else if (rect.right > winW - margin) {
+                    deltaX = (winW - margin) - rect.right;
+                }
+
+                // Vertical bounds
+                if (rect.top < margin) {
+                    deltaY = margin - rect.top;
+                } else if (rect.bottom > winH - margin) {
+                    deltaY = (winH - margin) - rect.bottom;
+                }
+
+                if (deltaX !== 0 || deltaY !== 0) {
+                    setPosition(prev => ({
+                        x: prev.x + deltaX,
+                        y: prev.y + deltaY
+                    }));
+                }
+            }
+        };
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, dragStart, initialPos]);
+
+    const resetPosition = () => {
+        setPosition({ x: 0, y: 0 });
+    };
+
+    // Calculate transform styles
+    const getTransformStyle = () => {
+        if (!isOpen) return 'translateX(450px)'; // Hide offscreen (slightly more than width)
+        return `translate(${position.x}px, ${position.y}px)`;
+    };
+
     return (
-        <div className={`${styles.graveyardPanel} ${isOpen ? styles.open : ''}`}>
+        <div
+            ref={panelRef}
+            className={`${styles.graveyardPanel} ${isOpen ? styles.open : ''}`}
+            style={{
+                transform: getTransformStyle(),
+                transition: isDragging ? 'none' : undefined // Disable transition while dragging for performance
+            }}
+        >
+            {/* Drag Handle Area */}
+            <div
+                className={styles.dragHandle}
+                onMouseDown={handleMouseDown}
+                title="Drag to move"
+            />
+
             {/* Close button in top left */}
             <button className={styles.closeBtn} onClick={onClose} title="Close">
                 <X size={14} />
             </button>
+
+            {/* Reset Position Button - Top Right */}
+            {(position.x !== 0 || position.y !== 0) && (
+                <button
+                    className={styles.resetBtn}
+                    onClick={resetPosition}
+                    title="Reset Position"
+                >
+                    <SelectionForegroundIcon size={14} />
+                </button>
+            )}
 
             <div
                 ref={setNodeRef}
