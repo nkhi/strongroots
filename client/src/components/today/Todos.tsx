@@ -971,8 +971,8 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
                   size={14}
                   className={`${styles.accordionCaret} ${isOpenExpanded ? styles.expanded : ''}`}
                 />
-                <span>Open</span>
                 <span className={styles.accordionCount}>{activeTasks.length}</span>
+                <span>Open</span>
               </button>
               {isOpenExpanded && (
                 <div className={styles.accordionActions}>
@@ -1032,8 +1032,8 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
                 size={14}
                 className={`${styles.accordionCaret} ${expandedAccordions[successKey] ? styles.expanded : ''}`}
               />
-              <span>Done</span>
               <span className={styles.accordionCount}>{completedTasks.length}</span>
+              <span>Done</span>
             </button>
             {expandedAccordions[successKey] && (
               <SortableTaskList
@@ -1058,8 +1058,8 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
                 size={14}
                 className={`${styles.accordionCaret} ${expandedAccordions[failedKey] ? styles.expanded : ''}`}
               />
-              <span>Cancelled</span>
               <span className={styles.accordionCount}>{failedTasks.length}</span>
+              <span>Cancelled</span>
             </button>
             {expandedAccordions[failedKey] && (
               <SortableTaskList
