@@ -42,7 +42,7 @@ export const THEME_COLORS_V2: Record<ThemeNameV2, ThemeColors[]> = {
         { id: 'night2-7', background: '#0d1117', text: '#58a6ff' }, // Blade Runner
         { id: 'night2-8', background: '#2d2d44', text: '#a8dadc' }, // Ghibli
         { id: 'night2-9', background: '#1a0036', text: '#00ced1' }, // Outrun
-        { id: 'night2-10', background: '#2c3e50', text: '#e74c3c' } // Wes Anderson
+        // { id: 'night2-10', background: '#2c3e50', text: '#e74c3c' } // Wes Anderson
     ],
     night3: [
         { id: 'night3-1', background: '#1e1b4b', text: '#a78bfa' }, // Electric Indigo
