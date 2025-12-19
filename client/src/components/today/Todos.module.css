@@ -9,8 +9,8 @@
 }
 
 .todoColumn {
-  min-width: 60vw;
-  width: 60vw;
+  min-width: 70vw;
+  width: 70vw;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1rem;
   display: flex;
@@ -120,7 +120,7 @@
 .todoContentRow {
   display: flex;
   flex-direction: row;
-  gap: 2rem;
+  gap: 1rem;
   flex: 1;
   min-height: 0;
 }
@@ -131,7 +131,7 @@
   align-items: baseline;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .todoDate {
@@ -201,6 +201,20 @@
   white-space: normal;
   word-break: break-word;
   line-height: 1.4;
+}
+
+.puntDaysBadge {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  margin-left: 4px;
 }
 
 .todoItem.completed .todoText {
@@ -344,6 +358,90 @@
   background: #FF3B30;
   border-color: #FF3B30;
   color: white;
+}
+
+/* Task Actions Overlay */
+.taskActionsWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.taskActionsBtn {
+  opacity: 0;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.todoItem:hover .taskActionsBtn {
+  opacity: 1;
+}
+
+.taskActionsBtn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.taskActionsOverlay {
+  position: fixed;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #111111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: taskActionsIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 12px 24px -4px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+@keyframes taskActionsIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+.actionOverlayBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.actionOverlayBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.actionOverlayBtn.deleteAction:hover {
+  color: #FF3B30;
+  background: rgba(255, 59, 48, 0.1);
 }
 
 .todoActions {
@@ -535,8 +633,8 @@
   flex-direction: column;
   border-radius: 8px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   flex-shrink: 0;
 }
 
@@ -705,17 +803,6 @@
 .taskDragOverlay .todoItem {
   background: transparent;
   border: none;
-}
-
-.droppableAccordion {
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  border-radius: 8px;
-  min-height: 40px;
-}
-
-.droppableAccordion.dropTarget {
-  background: rgba(52, 211, 153, 0.08);
-  border: 1px dashed rgba(52, 211, 153, 0.4);
 }
 
 /* Sortable Task List Container */

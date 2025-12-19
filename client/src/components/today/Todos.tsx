@@ -16,11 +16,12 @@
  */
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { getTasks, getWorkTasks, getTasksForWeek, createTask, updateTask, deleteTask as apiDeleteTask, batchPuntTasks, batchFailTasks, reorderTask } from '../../api/tasks';
 import type { Task } from '../../types';
 import { generateId, DateUtility } from '../../utils';
 import { getOrderBefore, sortByOrder } from '../../utils/orderUtils';
-import { Trash, Check, X, ArrowBendDownRight, CaretDown, ArrowRight, ArrowUp } from '@phosphor-icons/react';
+import { Trash, Check, X, ArrowBendDownRight, CaretDown, ArrowRight, ArrowUp, DotsThreeVertical } from '@phosphor-icons/react';
 import { DayWeek, type DayWeekColumnData } from '../shared/DayWeek';
 import { WeekView } from './WeekView';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
@@ -139,9 +140,10 @@ function StateOverlayWrapper({ taskId, dateStr, currentState, onSetState, onTogg
 
 /**
  * MiniPieChart - Visual task completion indicator
+ * Shows: fresh active (transparent), punted active (yellow), completed (green), failed (red)
  */
-function MiniPieChart({ active, completed, failed }: { active: number; completed: number; failed: number }) {
-  const total = active + completed + failed;
+function MiniPieChart({ active, punted, completed, failed }: { active: number; punted: number; completed: number; failed: number }) {
+  const total = active + punted + completed + failed;
   if (total === 0) return null;
 
   const size = 18;
@@ -150,6 +152,7 @@ function MiniPieChart({ active, completed, failed }: { active: number; completed
   const cy = size / 2;
 
   const activeAngle = (active / total) * 360;
+  const puntedAngle = (punted / total) * 360;
   const completedAngle = (completed / total) * 360;
 
   const polarToCartesian = (angle: number) => {
@@ -177,6 +180,10 @@ function MiniPieChart({ active, completed, failed }: { active: number; completed
     segments.push({ path: createArc(currentAngle, currentAngle + activeAngle), color: 'rgba(255, 255, 255, 0)' });
     currentAngle += activeAngle;
   }
+  if (punted > 0) {
+    segments.push({ path: createArc(currentAngle, currentAngle + puntedAngle), color: 'rgba(251, 191, 36, 0.8)' }); // Yellow/amber
+    currentAngle += puntedAngle;
+  }
   if (completed > 0) {
     segments.push({ path: createArc(currentAngle, currentAngle + completedAngle), color: 'rgba(52, 211, 153, 0.8)' });
     currentAngle += completedAngle;
@@ -191,6 +198,132 @@ function MiniPieChart({ active, completed, failed }: { active: number; completed
         <path key={i} d={seg.path} fill={seg.color} />
       ))}
     </svg>
+  );
+}
+
+/**
+ * TaskActionsOverlay - Hover overlay for task actions (move to top, punt, delete)
+ * Shows a DotsThreeVertical icon that reveals actions on hover
+ */
+interface TaskActionsOverlayProps {
+  onMoveToTop: () => void;
+  onPunt: () => void;
+  onDelete: () => void;
+}
+
+function TaskActionsOverlay({ onMoveToTop, onPunt, onDelete }: TaskActionsOverlayProps) {
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [isHoveringOverlay, setIsHoveringOverlay] = useState(false);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    clearTimers();
+    hoverTimerRef.current = setTimeout(() => {
+      setShowOverlay(true);
+    }, 200);
+  }, [clearTimers]);
+
+  const handleMouseLeave = useCallback(() => {
+    clearTimers();
+    hideTimerRef.current = setTimeout(() => {
+      if (!isHoveringOverlay) {
+        setShowOverlay(false);
+      }
+    }, 100);
+  }, [clearTimers, isHoveringOverlay]);
+
+  const handleOverlayEnter = useCallback(() => {
+    setIsHoveringOverlay(true);
+    clearTimers();
+  }, [clearTimers]);
+
+  const handleOverlayLeave = useCallback(() => {
+    setIsHoveringOverlay(false);
+    setShowOverlay(false);
+  }, []);
+
+  const handleAction = useCallback((e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+    setShowOverlay(false);
+    setIsHoveringOverlay(false);
+    clearTimers();
+  }, [clearTimers]);
+
+  useEffect(() => {
+    return () => { clearTimers(); };
+  }, [clearTimers]);
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    if (showOverlay && wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      setOverlayPosition({
+        top: rect.top + rect.height / 2,
+        left: rect.right + 8
+      });
+    }
+  }, [showOverlay]);
+
+  return (
+    <div
+      ref={wrapperRef}
+      className={styles.taskActionsWrapper}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button type="button" className={styles.taskActionsBtn}>
+        <DotsThreeVertical size={16} weight="bold" />
+      </button>
+      {showOverlay && createPortal(
+        <div
+          className={styles.taskActionsOverlay}
+          style={{ top: overlayPosition.top, left: overlayPosition.left }}
+          onMouseEnter={handleOverlayEnter}
+          onMouseLeave={handleOverlayLeave}
+        >
+          <button
+            type="button"
+            className={styles.actionOverlayBtn}
+            onClick={(e) => handleAction(e, onMoveToTop)}
+            title="Move to Top"
+          >
+            <ArrowUp size={14} />
+          </button>
+          <button
+            type="button"
+            className={styles.actionOverlayBtn}
+            onClick={(e) => handleAction(e, onPunt)}
+            title="Punt to Next Day"
+          >
+            <ArrowBendDownRight size={14} />
+          </button>
+          <button
+            type="button"
+            className={`${styles.actionOverlayBtn} ${styles.deleteAction}`}
+            onClick={(e) => handleAction(e, onDelete)}
+            title="Delete"
+          >
+            <Trash size={14} />
+          </button>
+        </div>,
+        document.body
+      )}
+    </div>
   );
 }
 
@@ -217,18 +350,20 @@ function getTaskState(task: Task): TaskState {
 
 /**
  * Get counts for tasks in a category
+ * Separates punted active tasks (puntDays > 0) from fresh active tasks
  */
 function getCountsForCategory(taskList: Task[]) {
-  let active = 0, completed = 0, failed = 0;
+  let active = 0, punted = 0, completed = 0, failed = 0;
 
   taskList.forEach(t => {
     const state = getTaskState(t);
     if (state === 'completed') completed++;
     else if (state === 'failed') failed++;
+    else if ((t.puntDays || 0) > 0) punted++;
     else active++;
   });
 
-  return { active, completed, failed };
+  return { active, punted, completed, failed };
 }
 
 // ============================================
@@ -456,14 +591,23 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
       targetDateStr = d.toISOString().split('T')[0];
     }
 
+    // Calculate puntDays for optimistic update
+    const createdDate = new Date(taskToClone.createdAt.split('T')[0] + 'T00:00:00Z');
+    const targetDate = new Date(targetDateStr + 'T00:00:00Z');
+    const newPuntDays = Math.max(0, Math.floor((targetDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
+
     const newTask: Task = {
       ...taskToClone,
       id: generateId(),
       date: targetDateStr,
-      createdAt: new Date().toISOString(),
+      createdAt: taskToClone.createdAt, // Preserve original creation date for puntDays tracking
       state: 'active',
-      completed: false
+      completed: false,
+      puntDays: newPuntDays
     };
+
+    console.log('[PUNT] Original task:', { id: taskToClone.id, date: taskToClone.date, createdAt: taskToClone.createdAt, puntDays: taskToClone.puntDays });
+    console.log('[PUNT] New task:', { id: newTask.id, date: newTask.date, createdAt: newTask.createdAt, puntDays: newPuntDays });
 
     // Optimistic update
     const updatedTasks = { ...tasks };
@@ -619,6 +763,7 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
 
   const renderTaskItem = (task: Task, dateStr: string) => {
     const taskState = getTaskState(task);
+    const puntDays = task.puntDays || 0;
 
     return (
       <DraggableTask key={task.id} task={task}>
@@ -641,28 +786,22 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
             </StateOverlayWrapper>
             <span className={styles.todoText}>{task.text}</span>
           </div>
-          <div className={styles.todoActions}>
-            <button
-              className={styles.todoMoveTopBtn}
-              onClick={() => moveTaskToTop(dateStr, task.id)}
-              title="Move to Top"
+          <TaskActionsOverlay
+            onMoveToTop={() => moveTaskToTop(dateStr, task.id)}
+            onPunt={() => puntTask(dateStr, task.id)}
+            onDelete={() => deleteTask(dateStr, task.id)}
+          />
+          {taskState === 'active' && puntDays > 0 && (
+            <span
+              className={styles.puntDaysBadge}
+              title={`Punted ${puntDays} day${puntDays > 1 ? 's' : ''}`}
+              style={{
+                color: puntDays >= 3 ? '#FF3B30' : puntDays === 2 ? '#FF9500' : '#FBBF24'
+              }}
             >
-              <ArrowUp size={14} />
-            </button>
-            <button
-              className={styles.todoCloneBtn}
-              onClick={() => puntTask(dateStr, task.id)}
-              title="Fail & Punt to Next Day"
-            >
-              <ArrowBendDownRight size={14} />
-            </button>
-            <button
-              className={styles.todoDeleteBtn}
-              onClick={() => deleteTask(dateStr, task.id)}
-            >
-              <Trash size={14} />
-            </button>
-          </div>
+              {puntDays}
+            </span>
+          )}
         </div>
       </DraggableTask>
     );

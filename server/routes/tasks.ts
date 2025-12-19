@@ -13,15 +13,25 @@ const router = express.Router();
 
 // Helper to transform DB row to API response
 function dbTaskToTask(t: DbTask): Task {
+  const dateStr = formatDate(t.date!);
+  const createdAtStr = t.created_at?.toISOString() || new Date().toISOString();
+  
+  // Calculate punt days: difference between active date and created date
+  const activeDate = new Date(dateStr + 'T00:00:00Z');
+  const createdDate = new Date(createdAtStr);
+  const createdDateOnly = new Date(createdDate.toISOString().split('T')[0] + 'T00:00:00Z');
+  const puntDays = Math.max(0, Math.floor((activeDate.getTime() - createdDateOnly.getTime()) / (1000 * 60 * 60 * 24)));
+  
   return {
     id: t.id,
     text: t.text,
     completed: t.completed ?? false,
-    date: formatDate(t.date!),
-    createdAt: t.created_at?.toISOString() || new Date().toISOString(),
+    date: dateStr,
+    createdAt: createdAtStr,
     category: t.category || 'life',
     state: t.state || 'active',
-    order: t.order
+    order: t.order,
+    puntDays
   };
 }
 
@@ -348,10 +358,11 @@ router.post('/tasks/batch/punt', async (req: Request<object, object, BatchPuntRe
       );
       
       const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const createdAt = new Date().toISOString();
+      // Preserve original created_at for puntDays tracking
+      const originalCreatedAt = task.created_at?.toISOString() || new Date().toISOString();
       await client.query(
         'INSERT INTO tasks (id, text, completed, date, created_at, category, state) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [newId, task.text, false, targetDate, createdAt, task.category, 'active']
+        [newId, task.text, false, targetDate, originalCreatedAt, task.category, 'active']
       );
       
       newTasks.push({
@@ -359,7 +370,7 @@ router.post('/tasks/batch/punt', async (req: Request<object, object, BatchPuntRe
         text: task.text,
         completed: false,
         date: targetDate,
-        createdAt,
+        createdAt: originalCreatedAt,
         category: task.category || 'life',
         state: 'active',
         order: null

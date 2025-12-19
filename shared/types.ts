@@ -43,6 +43,7 @@ export interface Task {
   category: string; // 'life' | 'work' - relaxed for server compatibility
   state: string;    // 'active' | 'completed' | 'failed' - relaxed for server
   order?: string | null;
+  puntDays?: number; // Days between activeDate and createdAt (calculated server-side)
 }
 
 export interface Question {
