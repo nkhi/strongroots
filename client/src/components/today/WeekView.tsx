@@ -1,73 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { DateUtility } from '../../utils';
-import { CaretLeft, CaretRight, ArrowBendUpLeft } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, StrategyIcon, Ghost, Circle } from '@phosphor-icons/react';
 import type { DayWeekColumnData } from '../shared/DayWeek';
 import styles from './WeekView.module.css';
+import dayWeekStyles from '../shared/DayWeek.module.css';
 
 interface WeekViewProps {
     renderColumn: (data: DayWeekColumnData) => React.ReactNode;
-    currentDate: Date;
+    weekDates: Date[];
+    onPrevWeek: () => void;
+    onNextWeek: () => void;
+    onCurrentWeek: () => void;
     onClose: () => void;
-    onWeekChange: (start: Date, end: Date) => void;
-    headerControls?: React.ReactNode;
-    workMode?: boolean;
+    onGraveyardClick?: () => void;
+    isGraveyardOpen?: boolean;
 }
 
-export function WeekView({ renderColumn, currentDate, onClose, onWeekChange, headerControls, workMode = false }: WeekViewProps) {
-    const [weekStart, setWeekStart] = useState<Date>(() => {
-        // Calculate start of week (Sunday)
-        const d = new Date(currentDate);
-        const day = d.getDay(); // 0 is Sunday
-        d.setDate(d.getDate() - day);
-        d.setHours(0, 0, 0, 0);
-        return d;
-    });
-
-    const [weekDates, setWeekDates] = useState<Date[]>([]);
-
-    useEffect(() => {
-        let dates = [];
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(weekStart);
-            d.setDate(d.getDate() + i);
-            dates.push(d);
-        }
-
-        // Filter out weekends for work mode (Monday-Friday only)
-        if (workMode) {
-            dates = dates.filter(d => {
-                const day = d.getDay();
-                return day !== 0 && day !== 6; // Exclude Sunday (0) and Saturday (6)
-            });
-        }
-
-        setWeekDates(dates);
-
-        // Notify parent of range change
-        const start = dates[0];
-        const end = dates[dates.length - 1];
-        onWeekChange(start, end);
-    }, [weekStart, workMode]);
-
-    const handlePrevWeek = () => {
-        const newStart = new Date(weekStart);
-        newStart.setDate(newStart.getDate() - 7);
-        setWeekStart(newStart);
-    };
-
-    const handleNextWeek = () => {
-        const newStart = new Date(weekStart);
-        newStart.setDate(newStart.getDate() + 7);
-        setWeekStart(newStart);
-    };
-
-    const handleCurrentWeek = () => {
-        const d = new Date();
-        const day = d.getDay();
-        d.setDate(d.getDate() - day);
-        d.setHours(0, 0, 0, 0);
-        setWeekStart(d);
-    };
+export function WeekView({
+    renderColumn,
+    weekDates,
+    onPrevWeek,
+    onNextWeek,
+    onCurrentWeek,
+    onClose,
+    onGraveyardClick,
+    isGraveyardOpen
+}: WeekViewProps) {
 
     return (
         <div className={styles.weekViewContainer}>
@@ -83,28 +41,55 @@ export function WeekView({ renderColumn, currentDate, onClose, onWeekChange, hea
                 })}
             </div>
 
-            <div className={styles.weekControlsCenter}>
-                <button className={styles.weekBackBtn} onClick={onClose} title="Back to Day View">
-                    <ArrowBendUpLeft size={20} weight="bold" />
+            {/* Navigation Controls (Floating Bottom Left) */}
+
+            {/* 1. Week Toggle (Acts as Back/Close) - Bottom most */}
+            <button
+                className={`${dayWeekStyles.zoomFloatingBtn} ${styles.weekActiveBtn}`}
+                onClick={onClose}
+                title="Back to Day View"
+            >
+                <StrategyIcon weight="fill" size={20} />
+                <span>Week</span>
+            </button>
+
+            {/* 2. Graveyard Toggle */}
+            {onGraveyardClick && (
+                <button
+                    className={`${dayWeekStyles.graveyardFloatingBtn} ${isGraveyardOpen ? dayWeekStyles.active : ''}`}
+                    onClick={onGraveyardClick}
+                    title="Task Graveyard"
+                >
+                    <Ghost weight="duotone" size={20} />
+                    <span>Grave</span>
+                </button>
+            )}
+
+            {/* 3. Week Navigation Pill - Positioned where "Today" usually is */}
+            <div className={styles.weekNavPill}>
+                <button
+                    className={styles.navArrowBtn}
+                    onClick={onPrevWeek}
+                    title="Previous Week"
+                >
+                    <CaretLeft size={16} weight="bold" />
                 </button>
 
-                {headerControls}
+                <button
+                    className={styles.navLabelBtn}
+                    onClick={onCurrentWeek}
+                    title="Go to Current Week"
+                >
+                    <Circle weight="fill" size={8} className={styles.navDotIcon} />
+                </button>
 
-                <div className={styles.weekNavGroup}>
-                    <button className={styles.weekNavBtn} onClick={handlePrevWeek}>
-                        <CaretLeft size={20} weight="bold" />
-                    </button>
-                    <button
-                        className={styles.weekLabel}
-                        onClick={handleCurrentWeek}
-                        title="Go to Current Week"
-                    >
-                        {DateUtility.formatDateRange(weekDates)}
-                    </button>
-                    <button className={styles.weekNavBtn} onClick={handleNextWeek}>
-                        <CaretRight size={20} weight="bold" />
-                    </button>
-                </div>
+                <button
+                    className={styles.navArrowBtn}
+                    onClick={onNextWeek}
+                    title="Next Week"
+                >
+                    <CaretRight size={16} weight="bold" />
+                </button>
             </div>
         </div>
     );

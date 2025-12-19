@@ -390,12 +390,64 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
   const [tasks, setTasks] = useState<Record<string, Task[]>>({});
   const [newTaskTexts, setNewTaskTexts] = useState<Record<string, string>>({});
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
-  const [weekCategory, setWeekCategory] = useState<TaskCategory>(workMode ? 'work' : 'life');
+  const [weekCategory] = useState<TaskCategory>(workMode ? 'work' : 'life');
   const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({});
 
   // Graveyard state
   const [isGraveyardOpen, setIsGraveyardOpen] = useState(false);
   const [graveyardTasks, setGraveyardTasks] = useState<Task[]>([]);
+
+  // Week View state
+  const [weekStart, setWeekStart] = useState<Date>(() => {
+    // Calculate start of week (Sunday)
+    const d = new Date();
+    const day = d.getDay(); // 0 is Sunday
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const [weekDates, setWeekDates] = useState<Date[]>([]);
+
+  // Calculate week dates whenever start changes or mode changes
+  useEffect(() => {
+    let dates = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      dates.push(d);
+    }
+
+    // Filter out weekends for work mode (Monday-Friday only)
+    if (workMode) {
+      dates = dates.filter(d => {
+        const day = d.getDay();
+        return day !== 0 && day !== 6; // Exclude Sunday (0) and Saturday (6)
+      });
+    }
+
+    setWeekDates(dates);
+  }, [weekStart, workMode]);
+
+  const handlePrevWeek = () => {
+    const newStart = new Date(weekStart);
+    newStart.setDate(newStart.getDate() - 7);
+    setWeekStart(newStart);
+  };
+
+  const handleNextWeek = () => {
+    const newStart = new Date(weekStart);
+    newStart.setDate(newStart.getDate() + 7);
+    setWeekStart(newStart);
+  };
+
+  const handleCurrentWeek = () => {
+    const d = new Date();
+    const day = d.getDay();
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    setWeekStart(d);
+  };
 
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -468,6 +520,13 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
       console.error('Failed to load week tasks:', error);
     }
   }
+
+  // Load week tasks when week dates change
+  useEffect(() => {
+    if (viewMode === 'week' && weekDates.length > 0) {
+      loadWeekTasks(weekDates[0], weekDates[weekDates.length - 1]);
+    }
+  }, [viewMode, weekDates]);
 
   async function loadGraveyardTasks() {
     try {
@@ -1173,28 +1232,13 @@ export function Todos({ apiBaseUrl, workMode = false }: TodosProps) {
     return (
       <WeekView
         renderColumn={renderTodoColumn}
-        currentDate={new Date()}
+        weekDates={weekDates}
+        onPrevWeek={handlePrevWeek}
+        onNextWeek={handleNextWeek}
+        onCurrentWeek={handleCurrentWeek}
         onClose={() => setViewMode('day')}
-        onWeekChange={loadWeekTasks}
-        workMode={workMode}
-        headerControls={
-          !workMode && (
-            <div className={styles.weekCategoryToggle}>
-              <button
-                className={`${styles.toggleBtn} ${weekCategory === 'life' ? styles.active : ''}`}
-                onClick={() => setWeekCategory('life')}
-              >
-                Life
-              </button>
-              <button
-                className={`${styles.toggleBtn} ${weekCategory === 'work' ? styles.active : ''}`}
-                onClick={() => setWeekCategory('work')}
-              >
-                Work
-              </button>
-            </div>
-          )
-        }
+        onGraveyardClick={() => setIsGraveyardOpen(prev => !prev)}
+        isGraveyardOpen={isGraveyardOpen}
       />
     );
   }
