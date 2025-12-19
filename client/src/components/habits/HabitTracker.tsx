@@ -7,8 +7,9 @@ import VlogModal from './VlogModal';
 // import ChartModal from './ChartModal';
 import { TimeFilterButtons } from './TimeFilterButtons';
 import { HabitTimeIcon } from './habitTimeConfig';
-import { VideoCameraIcon, HeartIcon } from '@phosphor-icons/react';
+import { VideoCameraIcon } from '@phosphor-icons/react';
 import styles from './HabitTracker.module.css';
+import { HabitNameCell } from './HabitNameCell';
 
 const CONFIG = {
   startDate: new Date('2025-11-09T00:00:00'),
@@ -618,29 +619,15 @@ export function HabitTracker({ apiBaseUrl }: HabitTrackerProps) {
                   className={dynamicRowHeight ? styles.dynamicRow : ''}
                   style={dynamicRowHeight ? { height: `${dynamicRowHeight}px` } : undefined}
                 >
+
+
                   <td>
-                    <div className={styles.habitName}>
-                      <span className={`${styles.timeIcon} ${habit.defaultTime}`}>
-                        <HabitTimeIcon defaultTime={habit.defaultTime} size={20} />
-                      </span>
-                      <div className={styles.habitNameText}>
-                        <span
-                          className={habit.comment ? styles.habitNameWithComment : undefined}
-                          onMouseEnter={(e) => handleHabitNameMouseEnter(habit.id, habit.comment, e)}
-                          onMouseLeave={handleHabitNameMouseLeave}
-                        >
-                          {habit.name}
-                        </span>
-                        {getCurrentStreak(habit.id) > 0 && (
-                          <span className={styles.streakBadge}>
-                            <span className={styles.streakIcon}>
-                              <HeartIcon size={12} weight="fill" />
-                            </span>
-                            <span>{getCurrentStreak(habit.id)}</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <HabitNameCell
+                      habit={habit}
+                      streak={getCurrentStreak(habit.id)}
+                      onMouseEnter={(e, id, comment) => handleHabitNameMouseEnter(id, comment, e)}
+                      onMouseLeave={handleHabitNameMouseLeave}
+                    />
                   </td>
                   {weeks.map((week, weekIndex) => {
                     const isExpanded = expandedWeeks.has(week.key);

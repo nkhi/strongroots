@@ -1,0 +1,107 @@
+.habitName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.habitNameText {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 22px;
+}
+
+.habitNameWithComment {
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+  cursor: help;
+}
+
+/* Time Icon wrapper */
+.timeIcon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.timeIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Badge Styles */
+.timeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 8px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Routine badge replaces the icon - Notion/Linear inspired */
+.routineBadge {
+  min-width: auto;
+  height: auto;
+  margin-left: 0;
+  margin-right: 0;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 3px 7px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.08));
+  color: #10b981;
+  border: none;
+  border-radius: 5px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+/* Streak Styles */
+.streakBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  color: #DC2627;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 12px;
+  transition: all 0.2s ease;
+}
+
+.streakBadge:hover {
+  transform: scale(1.05);
+}
+
+.streakIcon {
+  width: 12px;
+  height: 12px;
+  color: #dc2626;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.1);
+  }
+  20% {
+    transform: scale(1);
+  }
+}

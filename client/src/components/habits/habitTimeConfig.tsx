@@ -6,7 +6,8 @@ import {
     BarbellIcon,
     ResizeIcon,
     AxeIcon,
-    BlueprintIcon
+    BlueprintIcon,
+    ClockIcon
 } from '@phosphor-icons/react';
 import type { Habit } from '../../types';
 
@@ -60,7 +61,7 @@ export const HABIT_TIME_CONFIG: Record<HabitDefaultTime, HabitTimeConfig> = {
         showInFilter: true,
     },
     routine: {
-        icon: BlueprintIcon,
+        icon: ClockIcon,
         color: '#3ddde6',
         label: 'Routine habits',
         showInFilter: true,
@@ -88,6 +89,7 @@ export const FILTER_TIME_TYPES: HabitDefaultTime[] = [
     'growth',
     'quitting',
     'night',
+    'routine',
 ];
 
 // Helper component to render the icon for a given defaultTime

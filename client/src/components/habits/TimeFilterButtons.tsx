@@ -1,4 +1,4 @@
-import { PresentationChartIcon, SelectionAll } from '@phosphor-icons/react';
+import { PresentationChartIcon, SelectionAll, X } from '@phosphor-icons/react';
 import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './habitTimeConfig';
 import styles from './HabitTracker.module.css';
 import { useState } from 'react';
@@ -50,21 +50,22 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                     data-color="white"
                     disabled={!selectedTimeFilter}
                 >
-                    <SelectionAll size={18} weight="duotone" />
+                    <X size={18} color={selectedTimeFilter ? '#ffffff' : '#ffffff00'} />
+                    {/* <SelectionAll size={18} weight="duotone" /> */}
                 </button>
 
                 {/* Separator */}
                 <span className={styles.filterSeparator} />
 
                 {/* Trends Button */}
-                <button
+                {/* <button
                     className={styles.timeFilterBtn}
                     onClick={() => setShowChart(true)}
                     title="View Trends"
                     data-color="#6366f1"
                 >
                     <PresentationChartIcon size={18} weight="duotone" />
-                </button>
+                </button> */}
             </div>
 
 
