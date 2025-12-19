@@ -84,17 +84,12 @@
   flex: 1;
   overflow: hidden;
   padding: 32px 10px 10px; /* Top padding clears the buttons */
-  display: grid;
-  grid-template-rows: auto 1fr auto 1fr; /* header, tasks, divider, tasks */
+  display: flex;
+  flex-direction: column;
   gap: 2px;
   min-height: 0;
   transition: background-color 0.2s ease, border-color 0.2s ease;
   border-radius: 8px;
-}
-
-/* When only one category, no grid needed */
-.graveyardList:has(.categorySection:only-child) {
-  grid-template-rows: 1fr;
 }
 
 /* Drop target state */
