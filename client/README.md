@@ -11,6 +11,14 @@ bun install      # or pnpm install
 bun run dev      # or pnpm run dev
 ```
 
+You'll need to set the `VITE_CAP_URL` environment variable to the URL of your Cap production instance. I use these for connecting to a Cap deployment and fallback location data for Daylight.
+
+```
+VITE_FALLBACK_LAT=...
+VITE_FALLBACK_LON=...
+VITE_CAP_URL=...
+```
+
 Runs on `http://localhost:5173` (with `--host 0.0.0.0` for local network access).
 
 > **Tip:** Use `./go.sh` from the project root to start both client and server together.

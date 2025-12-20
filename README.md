@@ -2,7 +2,7 @@
 
 Start aka Start Menu is my personal dashboard for: Habits, Todos, Memos, Journals, Lists, and Goals. 
 
-I serve this on my local network and access it across different devices. There's also a work-mode with restricted data fetching. I remixed [Daylight](https://github.com/bakkenbaeck/daylight-web) as a screensaver. I also integrated the Loom SDK to record weekly vlogs. This app exists to make it easy to iterate on *how* I organize myself. Ideally, building a bespoke UX and feature set will encourage consistency w.r.t reflection and personal growth. 
+I serve this on my local network and access it across different devices. There's also a work-mode with restricted data fetching. I remixed [Daylight](https://github.com/bakkenbaeck/daylight-web) as a screensaver. I also integrated ~~the Loom SDK~~ [Cap](https://github.com/CapSoftware/Cap) to record weekly vlogs. This app exists to make it easy to iterate on *how* I organize myself. Ideally, building a bespoke UX and feature set will encourage consistency w.r.t reflection and personal growth. 
 
 ## Features
 
@@ -92,6 +92,8 @@ Google Keep-style cards for ideas on what to do next. Mosaic tile layout with va
    DATABASE_URL=<your-cockroachdb-connection-string>
    ```
 
+   Setup a CockroachDB instance. Then run `server/db_utils/table_setup.sql` to create the necessary tables.
+
 5. **Start the app**
    ```bash
    ./go.sh
@@ -150,6 +152,7 @@ All data is stored in your own CockroachDB instance. Nothing is sent to external
 **Open Source:**
 - [Memos](https://github.com/usememos/memos) - For the embedded note-taking experience
 - [Daylight](https://daylight.today/app/) - For the sun position screensaver inspiration
+- [Cap](https://cap.so/docs/self-hosting) - For the video recording experience
 
 **Inspiration:**
 - [Tweek](https://tweek.so/) - Todos

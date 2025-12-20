@@ -1,4 +1,4 @@
-import { CalendarCheck, ListChecks, TipJarIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CarrotIcon, SunDim, VideoCameraIcon, CalendarDotsIcon } from '@phosphor-icons/react';
+import { CalendarCheck, ListChecks, TipJarIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CarrotIcon, SunDim, VideoCameraIcon } from '@phosphor-icons/react';
 import { ServerStatus } from './ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../daylight/DaylightContext';
@@ -15,6 +15,8 @@ interface NavigationProps {
 
 export function Navigation({ activeTab, lastTab, onTabChange, apiBaseUrl, workMode = false }: NavigationProps) {
     const { themeColors } = useDaylight();
+
+    const capUrl = import.meta.env.VITE_CAP_URL;
 
     const navStyle = (activeTab === 'daylight' && themeColors) ? {
         '--daylight-text-color': themeColors.text
@@ -85,7 +87,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, apiBaseUrl, workMo
                         </button>
                         <button
                             className={`${styles.tabBtn} ${activeTab === 'vlogs' ? styles.active : ''}`}
-                            onClick={() => onTabChange('vlogs')}
+                            onClick={() => window.open(capUrl, '_blank')}
                         >
                             <VideoCameraIcon size={20} weight={activeTab === 'vlogs' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
