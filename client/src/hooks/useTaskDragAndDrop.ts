@@ -44,16 +44,19 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import type { Task } from '../types';
 import { getOrderBetween, getOrderAfter, getOrderBefore, sortByOrder } from '../utils/orderUtils';
+import {
+  getTaskCategory,
+  getTaskState,
+  type TaskCategory,
+  type TaskState,
+} from '../components/todos/taskUtils';
+
+// Re-export types for consumers
+export type { TaskCategory, TaskState };
 
 // ============================================
 // Types
 // ============================================
-
-/** Task category type */
-export type TaskCategory = 'life' | 'work';
-
-/** Task state type */
-export type TaskState = 'active' | 'completed' | 'failed';
 
 /** Special container ID for graveyard */
 export const GRAVEYARD_CONTAINER_ID = 'graveyard';
@@ -97,25 +100,25 @@ export type TasksUpdater = (prev: Record<string, Task[]>) => Record<string, Task
 export interface UseTaskDragAndDropOptions {
   /** Current tasks state, keyed by date */
   tasks: Record<string, Task[]>;
-  
+
   /** Graveyard tasks */
   graveyardTasks?: Task[];
-  
+
   /** Callback to persist reorder to server */
   onReorder: (taskId: string, newOrder: string, options?: ReorderOptions) => Promise<void>;
-  
+
   /** Callback for optimistic updates */
   onOptimisticUpdate: (updater: TasksUpdater) => void;
-  
+
   /** Callback when task is dropped on graveyard */
   onGraveyard?: (taskId: string, sourceDate: string) => Promise<void>;
-  
+
   /** Callback when graveyard task is dropped on a date */
   onResurrect?: (taskId: string, targetDate: string) => Promise<void>;
-  
+
   /** Callback to reload tasks on error */
   onError?: () => void;
-  
+
   /** Minimum distance before drag activates (default: 8px) */
   activationDistance?: number;
 }
@@ -124,19 +127,19 @@ export interface UseTaskDragAndDropOptions {
 export interface UseTaskDragAndDropReturn {
   /** Configured sensors for DndContext */
   sensors: ReturnType<typeof useSensors>;
-  
+
   /** Currently dragged task (for overlay) */
   activeTask: Task | null;
-  
+
   /** Source info for active drag */
   dragSource: DragSource | null;
-  
+
   /** Currently hovered drop target */
   overTarget: DropTargetInfo | null;
-  
+
   /** Whether currently dragging over graveyard */
   isOverGraveyard: boolean;
-  
+
   /** Event handlers for DndContext */
   handlers: {
     onDragStart: (event: DragStartEvent) => void;
@@ -144,10 +147,10 @@ export interface UseTaskDragAndDropReturn {
     onDragEnd: (event: DragEndEvent) => void;
     onDragCancel: () => void;
   };
-  
+
   /** Helper to get tasks for a specific container */
   getTasksForContainer: (dateStr: string, category: TaskCategory, state: TaskState) => Task[];
-  
+
   /** Check if a container is the current drop target */
   isDropTarget: (dateStr: string, category: TaskCategory, state: TaskState) => boolean;
 }
@@ -170,20 +173,20 @@ export function createContainerId(dateStr: string, category: TaskCategory, state
  */
 export function parseContainerId(id: string): DropTargetInfo | null {
   const parts = id.split('_');
-  
+
   // Must have at least 3 parts and first part must look like a date
   if (parts.length < 3 || !parts[0].includes('-')) {
     return null;
   }
-  
+
   const dateStr = parts[0];
   const category = parts[1];
   const state = parts[2];
-  
+
   // Validate category and state
   if (!['life', 'work'].includes(category)) return null;
   if (!['active', 'completed', 'failed'].includes(state)) return null;
-  
+
   return {
     dateStr,
     category: category as TaskCategory,
@@ -191,22 +194,8 @@ export function parseContainerId(id: string): DropTargetInfo | null {
   };
 }
 
-/**
- * Get task category safely typed
- */
-function getTaskCategory(task: Task): TaskCategory {
-  return (task.category === 'work' ? 'work' : 'life') as TaskCategory;
-}
-
-/**
- * Get task state safely typed
- */
-function getTaskState(task: Task): TaskState {
-  if (task.state === 'completed' || task.state === 'failed') {
-    return task.state as TaskState;
-  }
-  return task.completed ? 'completed' : 'active';
-}
+// NOTE: getTaskCategory and getTaskState are imported from taskUtils.ts
+// to avoid duplication across the codebase.
 
 // ============================================
 // Order Calculation
@@ -228,28 +217,28 @@ export function calculateNewOrder(
   const filteredTasks = excludeTaskId
     ? sortedTasks.filter(t => t.id !== excludeTaskId)
     : sortedTasks;
-  
+
   // Get orders from filtered list
   const orders = filteredTasks
     .map(t => t.order)
     .filter((o): o is string => o != null && o !== '');
-  
+
   // Edge cases
   if (orders.length === 0) {
     // First item in list
     return getOrderAfter(null);
   }
-  
+
   if (targetIndex <= 0) {
     // Insert at beginning
     return getOrderBefore(orders[0]);
   }
-  
+
   if (targetIndex >= orders.length) {
     // Insert at end
     return getOrderAfter(orders[orders.length - 1]);
   }
-  
+
   // Insert between two items
   const before = orders[targetIndex - 1];
   const after = orders[targetIndex];
@@ -271,16 +260,16 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     onError,
     activationDistance = 8,
   } = options;
-  
+
   // Drag state
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [dragSource, setDragSource] = useState<DragSource | null>(null);
   const [overTarget, setOverTarget] = useState<DropTargetInfo | null>(null);
   const [isOverGraveyard, setIsOverGraveyard] = useState(false);
-  
+
   // Ref to track if we're in the middle of a drag
   const isDraggingRef = useRef(false);
-  
+
   // Configure sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -292,7 +281,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
+
   /**
    * Get tasks for a specific container (date + category + state)
    */
@@ -308,7 +297,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       return taskCategory === category && taskState === state;
     });
   }, [tasks]);
-  
+
   /**
    * Find a task across all dates or graveyard.
    * Returns isFromGraveyard = true if found in graveyard.
@@ -319,7 +308,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     if (graveyardTask) {
       return { task: graveyardTask, dateStr: '', isFromGraveyard: true };
     }
-    
+
     // Then check regular date-based tasks
     for (const [dateStr, dayTasks] of Object.entries(tasks)) {
       const task = dayTasks.find(t => t.id === taskId);
@@ -329,7 +318,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     }
     return null;
   }, [tasks, graveyardTasks]);
-  
+
   /**
    * Check if a container is the current drop target
    */
@@ -345,24 +334,24 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       overTarget.state === state
     );
   }, [overTarget]);
-  
+
   // ----------------------------------------
   // Drag Event Handlers
   // ----------------------------------------
-  
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const taskId = String(event.active.id);
     const found = findTask(taskId);
-    
+
     if (!found) {
       console.warn('[DnD] Could not find task for drag start:', taskId);
       return;
     }
-    
+
     const { task, dateStr, isFromGraveyard } = found;
     const category = getTaskCategory(task);
     const state = getTaskState(task);
-    
+
     // Find original index in container
     let originalIndex = 0;
     if (!isFromGraveyard) {
@@ -370,7 +359,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       const sortedTasks = sortByOrder(containerTasks);
       originalIndex = sortedTasks.findIndex(t => t.id === taskId);
     }
-    
+
     isDraggingRef.current = true;
     setActiveTask(task);
     setDragSource({
@@ -381,25 +370,25 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       originalIndex,
     });
   }, [findTask, getTasksForContainer]);
-  
+
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { over } = event;
-    
+
     if (!over) {
       setOverTarget(null);
       setIsOverGraveyard(false);
       return;
     }
-    
+
     const overId = String(over.id);
-    
+
     // Check if dropping on graveyard
     if (overId === GRAVEYARD_CONTAINER_ID) {
       setOverTarget(null);
       setIsOverGraveyard(true);
       return;
     }
-    
+
     // Check if dropping on a graveyard task
     const found = findTask(overId);
     if (found?.isFromGraveyard) {
@@ -407,17 +396,17 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       setIsOverGraveyard(true);
       return;
     }
-    
+
     // Otherwise, reset graveyard state
     setIsOverGraveyard(false);
-    
+
     // Try to parse as container ID
     const containerInfo = parseContainerId(overId);
     if (containerInfo) {
       setOverTarget(containerInfo);
       return;
     }
-    
+
     // It's a task ID - find its container
     if (found) {
       const { task, dateStr } = found;
@@ -428,10 +417,10 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       });
     }
   }, [findTask]);
-  
+
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     // Reset state
     setActiveTask(null);
     setOverTarget(null);
@@ -439,38 +428,38 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     const source = dragSource;
     setDragSource(null);
     isDraggingRef.current = false;
-    
+
     // Validate we have all required data
     if (!over || !source) {
       return;
     }
-    
+
     const taskId = String(active.id);
     const overId = String(over.id);
-    
+
     // Same item, no change
     if (taskId === overId) {
       return;
     }
-    
+
     // Check if source is from graveyard
     const isSourceGraveyard = source.dateStr === GRAVEYARD_CONTAINER_ID;
-    
+
     // Check if target is graveyard
-    const isTargetGraveyard = overId === GRAVEYARD_CONTAINER_ID || 
+    const isTargetGraveyard = overId === GRAVEYARD_CONTAINER_ID ||
       (findTask(overId)?.isFromGraveyard ?? false);
-    
+
     // Handle Day → Graveyard: call onGraveyard
     if (!isSourceGraveyard && isTargetGraveyard && onGraveyard) {
       await onGraveyard(taskId, source.dateStr);
       return;
     }
-    
+
     // Handle Graveyard → Day: call onResurrect
     if (isSourceGraveyard && !isTargetGraveyard && onResurrect) {
       // Find target date from container or task
       let targetDate: string | null = null;
-      
+
       const containerInfo = parseContainerId(overId);
       if (containerInfo) {
         targetDate = containerInfo.dateStr;
@@ -480,22 +469,22 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
           targetDate = found.dateStr;
         }
       }
-      
+
       if (targetDate) {
         await onResurrect(taskId, targetDate);
       }
       return;
     }
-    
+
     // If source is graveyard and target is also graveyard, do nothing
     if (isSourceGraveyard && isTargetGraveyard) {
       return;
     }
-    
+
     // Determine target container
     let targetInfo = parseContainerId(overId);
     let overTaskIndex = -1;
-    
+
     if (!targetInfo) {
       // Dropped on a task - find its container
       const found = findTask(overId);
@@ -503,14 +492,14 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
         console.warn('[DnD] Could not find drop target:', overId);
         return;
       }
-      
+
       const { task: overTask, dateStr } = found;
       targetInfo = {
         dateStr,
         category: getTaskCategory(overTask),
         state: getTaskState(overTask),
       };
-      
+
       // Find the index of the task we dropped onto
       const containerTasks = getTasksForContainer(
         targetInfo.dateStr,
@@ -520,7 +509,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       const sortedTasks = sortByOrder(containerTasks.filter(t => t.id !== taskId));
       overTaskIndex = sortedTasks.findIndex(t => t.id === overId);
     }
-    
+
     // Get target container's tasks
     const targetTasks = getTasksForContainer(
       targetInfo.dateStr,
@@ -528,7 +517,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       targetInfo.state
     );
     const sortedTargetTasks = sortByOrder(targetTasks.filter(t => t.id !== taskId));
-    
+
     // Calculate new order
     let newOrder: string;
     if (overTaskIndex !== -1) {
@@ -539,28 +528,28 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       // Dropped on container - append to end
       newOrder = calculateNewOrder(sortedTargetTasks, sortedTargetTasks.length, taskId);
     }
-    
+
     // Determine what changed
     const dateChanged = targetInfo.dateStr !== source.dateStr;
     const categoryChanged = targetInfo.category !== source.category;
     const stateChanged = targetInfo.state !== source.state;
-    
+
     // Check if anything actually changed
     const found = findTask(taskId);
     if (!dateChanged && !categoryChanged && !stateChanged && found?.task.order === newOrder) {
       return;
     }
-    
+
     // Build reorder options
     const reorderOptions: ReorderOptions = {};
     if (dateChanged) reorderOptions.date = targetInfo.dateStr;
     if (categoryChanged) reorderOptions.category = targetInfo.category;
     if (stateChanged) reorderOptions.state = targetInfo.state;
-    
+
     // Optimistic update
     onOptimisticUpdate(prev => {
       const updated = { ...prev };
-      
+
       // Remove from source
       const sourceTasks = [...(updated[source.dateStr] || [])];
       const sourceIndex = sourceTasks.findIndex(t => t.id === taskId);
@@ -568,10 +557,10 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
         console.warn('[DnD] Task not found in source during optimistic update');
         return prev;
       }
-      
+
       const [movedTask] = sourceTasks.splice(sourceIndex, 1);
       updated[source.dateStr] = sourceTasks;
-      
+
       // Update task properties
       const updatedTask: Task = {
         ...movedTask,
@@ -581,16 +570,16 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
         state: targetInfo.state,
         completed: targetInfo.state === 'completed',
       };
-      
+
       // Add to target
       const targetDate = targetInfo.dateStr;
       const currentTargetTasks = updated[targetDate] ? [...updated[targetDate]] : [];
       currentTargetTasks.push(updatedTask);
       updated[targetDate] = currentTargetTasks;
-      
+
       return updated;
     });
-    
+
     // Persist to server
     try {
       await onReorder(taskId, newOrder, reorderOptions);
@@ -599,7 +588,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
       onError?.();
     }
   }, [dragSource, findTask, getTasksForContainer, onOptimisticUpdate, onReorder, onGraveyard, onResurrect, onError]);
-  
+
   const handleDragCancel = useCallback(() => {
     setActiveTask(null);
     setDragSource(null);
@@ -607,7 +596,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     setIsOverGraveyard(false);
     isDraggingRef.current = false;
   }, []);
-  
+
   // Memoize handlers object to prevent unnecessary re-renders
   const handlers = useMemo(() => ({
     onDragStart: handleDragStart,
@@ -615,7 +604,7 @@ export function useTaskDragAndDrop(options: UseTaskDragAndDropOptions): UseTaskD
     onDragEnd: handleDragEnd,
     onDragCancel: handleDragCancel,
   }), [handleDragStart, handleDragOver, handleDragEnd, handleDragCancel]);
-  
+
   return {
     sensors,
     activeTask,

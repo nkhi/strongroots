@@ -11,9 +11,25 @@ import { formatDate } from '../../shared/types.ts';
 
 const router = express.Router();
 
+/**
+ * Count business days (Mon-Fri) between two dates.
+ * Used for work tasks to show "work days punted" instead of calendar days.
+ */
+function countWorkdays(start: Date, end: Date): number {
+  let count = 0;
+  const current = new Date(start);
+  while (current < end) {
+    const day = current.getUTCDay();
+    if (day !== 0 && day !== 6) count++;
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+  return count;
+}
+
 // Helper to transform DB row to API response
 function dbTaskToTask(t: DbTask): Task {
   const createdAtStr = t.created_at?.toISOString() || new Date().toISOString();
+  const category = t.category || 'life';
 
   // Handle null dates (graveyard tasks)
   if (!t.date) {
@@ -23,7 +39,7 @@ function dbTaskToTask(t: DbTask): Task {
       completed: t.completed ?? false,
       date: null,
       createdAt: createdAtStr,
-      category: t.category || 'life',
+      category,
       state: t.state || 'active',
       order: t.order,
       puntDays: 0
@@ -36,7 +52,14 @@ function dbTaskToTask(t: DbTask): Task {
   const activeDate = new Date(dateStr + 'T00:00:00Z');
   const createdDate = new Date(createdAtStr);
   const createdDateOnly = new Date(createdDate.toISOString().split('T')[0] + 'T00:00:00Z');
-  const puntDays = Math.max(0, Math.floor((activeDate.getTime() - createdDateOnly.getTime()) / (1000 * 60 * 60 * 24)));
+
+  // For work tasks, count only business days; for life tasks, count calendar days
+  let puntDays: number;
+  if (category === 'work') {
+    puntDays = countWorkdays(createdDateOnly, activeDate);
+  } else {
+    puntDays = Math.max(0, Math.floor((activeDate.getTime() - createdDateOnly.getTime()) / (1000 * 60 * 60 * 24)));
+  }
 
   return {
     id: t.id,
@@ -44,7 +67,7 @@ function dbTaskToTask(t: DbTask): Task {
     completed: t.completed ?? false,
     date: dateStr,
     createdAt: createdAtStr,
-    category: t.category || 'life',
+    category,
     state: t.state || 'active',
     order: t.order,
     puntDays

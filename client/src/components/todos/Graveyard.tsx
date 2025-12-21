@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Calendar, Trash, X, Ghost, CaretDown, SpinnerGap, ArrowsCounterClockwise, SelectionForegroundIcon } from '@phosphor-icons/react';
+import { Calendar, Trash, X, Ghost, CaretDown, SpinnerGap, SelectionForegroundIcon } from '@phosphor-icons/react';
 import { DateUtility } from '../../utils';
 import type { Task } from '../../types';
 import { GRAVEYARD_CONTAINER_ID } from '../../hooks/useTaskDragAndDrop';

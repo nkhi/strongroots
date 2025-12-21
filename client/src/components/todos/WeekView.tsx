@@ -1,6 +1,6 @@
 import React from 'react';
 import { DateUtility } from '../../utils';
-import { CaretLeft, CaretRight, StrategyIcon, Ghost, Circle, Plant, Briefcase, LadderIcon } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, StrategyIcon, Ghost, Circle, Briefcase, LadderIcon } from '@phosphor-icons/react';
 import type { DayWeekColumnData } from '../shared/DayWeek';
 import styles from './WeekView.module.css';
 import dayWeekStyles from '../shared/DayWeek.module.css';
