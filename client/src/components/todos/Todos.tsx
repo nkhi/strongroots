@@ -40,6 +40,7 @@ import { useWeekNavigation } from '../../hooks/useWeekNavigation';
 import { StateOverlayWrapper } from './StateOverlayWrapper';
 import { TaskActionsOverlay } from './TaskActionsOverlay';
 import { StatusBar } from './StatusBar';
+import { CalendarPopover } from './CalendarPopover';
 
 // utilities
 import {
@@ -345,6 +346,7 @@ export function Todos({ workMode = false }: TodosProps) {
               : <>{date.toLocaleDateString('en-US', { weekday: viewMode === 'week' ? 'short' : 'long' })}, {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
             }
           </span>
+          <CalendarPopover date={date} />
         </div>
 
         <div className={styles.todoContentRow}>
