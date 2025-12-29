@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react';
-import { LeafIcon, MusicNotes } from '@phosphor-icons/react';
+import { LeafIcon } from '@phosphor-icons/react';
 import { useNook } from './useNook';
 import { NookPanel } from './NookPanel';
 import styles from './Nook.module.css';

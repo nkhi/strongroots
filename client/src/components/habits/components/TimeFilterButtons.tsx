@@ -1,6 +1,5 @@
-import { PresentationChartIcon, SelectionAll, X } from '@phosphor-icons/react';
 import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './habitTimeConfig';
-import styles from './HabitTracker.module.css';
+import styles from '../HabitTracker.module.css';
 import { useState } from 'react';
 import ChartModal from './ChartModal';
 

@@ -1,5 +1,5 @@
-import type { Vlog } from '../../types';
-import styles from './HabitTracker.module.css';
+import type { Vlog } from '../../../types';
+import styles from '../HabitTracker.module.css';
 
 interface VlogModalProps {
   vlog: Vlog;

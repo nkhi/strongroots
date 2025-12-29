@@ -10,8 +10,8 @@ import {
     ResponsiveContainer,
     LabelList
 } from 'recharts';
-import type { Habit } from '../../types';
-import styles from './HabitTracker.module.css';
+import type { Habit } from '../../../types';
+import styles from '../HabitTracker.module.css';
 
 interface ChartModalProps {
     data: any[];

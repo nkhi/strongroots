@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { setup } from '@loomhq/record-sdk';
 import { isSupported } from '@loomhq/record-sdk/is-supported';
 import { oembed } from '@loomhq/loom-embed';
-import styles from './HabitTracker.module.css';
+import styles from '../HabitTracker.module.css';
 
 const PUBLIC_APP_ID = 'fae3c61b-58d9-47dc-9cc8-c148e8d8dbaf';
 

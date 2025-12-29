@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Habit } from '../../types';
+import type { Habit } from '../../../types';
 import { HabitTimeIcon } from './habitTimeConfig';
 import styles from './ReorderOverlay.module.css';
 

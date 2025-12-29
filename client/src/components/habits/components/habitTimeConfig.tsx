@@ -6,10 +6,9 @@ import {
     BarbellIcon,
     ResizeIcon,
     AxeIcon,
-    BlueprintIcon,
     ClockIcon
 } from '@phosphor-icons/react';
-import type { Habit } from '../../types';
+import type { Habit } from '../../../types';
 
 // Extract the defaultTime type from the Habit interface
 export type HabitDefaultTime = Habit['defaultTime'];
