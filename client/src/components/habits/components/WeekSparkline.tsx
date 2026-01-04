@@ -50,21 +50,23 @@ export function WeekSparkline({
         </defs>
     );
 
-    if (prevWeek && !isPrevExpanded) {
-        const prevWeekStart = new Date(prevWeek.key + 'T00:00:00');
-        const prevStats = getHabitStats(habit.id, prevWeekStart, prevWeek.end);
-        const prevColor = GRADE_COLORS[prevStats.grade.class] || '#4b5563';
-        const yPrev = getY(prevStats.percentage);
+    // Since weeks are reversed: prevWeek is newer (left), nextWeek is older (right)
+    // Connect to the right (nextWeek = older week)
+    if (nextWeek && !isNextExpanded) {
+        const nextWeekStart = new Date(nextWeek.key + 'T00:00:00');
+        const nextStats = getHabitStats(habit.id, nextWeekStart, nextWeek.end);
+        const nextColor = GRADE_COLORS[nextStats.grade.class] || '#4b5563';
+        const yNext = getY(nextStats.percentage);
 
-        const pathD = `M -50 ${yPrev} C 0 ${yPrev}, 0 ${yCurr}, 50 ${yCurr}`;
-        const fillD = `${pathD} V 100 H -50 Z`;
+        const pathD = `M 50 ${yCurr} C 100 ${yCurr}, 100 ${yNext}, 150 ${yNext}`;
+        const fillD = `${pathD} V 100 H 50 Z`;
         const gradId = `grad-${habit.id}-${week.key}-conn`;
 
         strokeElements.push(
             <defs key="defs-conn">
-                <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1="-50" y1="0" x2="50" y2="0">
-                    <stop offset="0%" stopColor={prevColor} />
-                    <stop offset="100%" stopColor={currentColor} />
+                <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1="50" y1="0" x2="150" y2="0">
+                    <stop offset="0%" stopColor={currentColor} />
+                    <stop offset="100%" stopColor={nextColor} />
                 </linearGradient>
             </defs>
         );
@@ -76,18 +78,6 @@ export function WeekSparkline({
             <path key="conn-stroke" d={pathD} className={styles.sparklinePath} style={{ stroke: `url(#${gradId})`, strokeWidth: 1.5625, opacity: 0.55 }} />
         );
     } else {
-        const pathD = `M 0 ${yCurr} L 50 ${yCurr}`;
-        const fillD = `${pathD} V 100 H 0 Z`;
-
-        fillElements.push(
-            <path key="start-fill" d={fillD} fill={currentColor} mask={`url(#${maskId})`} style={{ pointerEvents: 'none' }} />
-        );
-        strokeElements.push(
-            <path key="start-stroke" d={pathD} className={styles.sparklinePath} style={{ stroke: currentColor, strokeWidth: 1.5625, opacity: 0.55 }} />
-        );
-    }
-
-    if (!nextWeek || isNextExpanded) {
         const pathD = `M 50 ${yCurr} L 100 ${yCurr}`;
         const fillD = `${pathD} V 100 H 50 Z`;
 
@@ -96,6 +86,19 @@ export function WeekSparkline({
         );
         strokeElements.push(
             <path key="end-stroke" d={pathD} className={styles.sparklinePath} style={{ stroke: currentColor, strokeWidth: 1.5625, opacity: 0.55 }} />
+        );
+    }
+
+    // Connect to the left (prevWeek = newer week)
+    if (!prevWeek || isPrevExpanded) {
+        const pathD = `M 0 ${yCurr} L 50 ${yCurr}`;
+        const fillD = `${pathD} V 100 H 0 Z`;
+
+        fillElements.push(
+            <path key="start-fill" d={fillD} fill={currentColor} mask={`url(#${maskId})`} style={{ pointerEvents: 'none' }} />
+        );
+        strokeElements.push(
+            <path key="start-stroke" d={pathD} className={styles.sparklinePath} style={{ stroke: currentColor, strokeWidth: 1.5625, opacity: 0.55 }} />
         );
     }
 

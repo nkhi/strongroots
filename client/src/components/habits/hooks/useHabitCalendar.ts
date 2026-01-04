@@ -47,12 +47,14 @@ export function useHabitCalendar({ habits, defaultStartDate, tableWrapperRef }: 
       if (!weeksMap.has(key)) weeksMap.set(key, []);
       weeksMap.get(key)!.push(date);
     });
-    return Array.from(weeksMap.entries()).map(([key, days]) => ({
-      key,
-      start: days[0],
-      end: days[days.length - 1],
-      days
-    }));
+    return Array.from(weeksMap.entries())
+      .map(([key, days]) => ({
+        key,
+        start: days[0],
+        end: days[days.length - 1],
+        days: days.reverse() // Reverse days within each week (newest first)
+      }))
+      .reverse(); // Reverse weeks array (newest week first)
   }, [dates]);
 
   function toggleWeek(weekKey: string) {
@@ -71,12 +73,9 @@ export function useHabitCalendar({ habits, defaultStartDate, tableWrapperRef }: 
     if (todayCells.length > 0 && tableWrapperRef.current) {
       const todayHeader = todayCells[0].closest('th');
       if (todayHeader) {
-        const containerWidth = tableWrapperRef.current.clientWidth;
         const todayLeft = (todayHeader as HTMLElement).offsetLeft;
-        const todayWidth = (todayHeader as HTMLElement).offsetWidth;
-
-        const scrollPosition = todayLeft - containerWidth + todayWidth + 200;
-        tableWrapperRef.current.scrollLeft = Math.max(0, scrollPosition);
+        // Scroll to show today on the left with some padding
+        tableWrapperRef.current.scrollLeft = Math.max(0, todayLeft - 200);
       }
     }
   }

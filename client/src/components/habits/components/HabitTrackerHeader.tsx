@@ -69,12 +69,16 @@ export const HabitTrackerHeader = forwardRef<HTMLTableSectionElement, HabitTrack
                     }
 
                     return week.days.map((date, idx) => {
-                        const isSaturday = date.getDay() === 6;
+                        const isSunday = date.getDay() === 0; // Changed from Saturday since array is reversed
                         const stats = getDayStats(date);
 
                         return (
                             <React.Fragment key={`${week.key}-${idx}`}>
-                                <th colSpan={1}>
+                                <th
+                                    colSpan={1}
+                                    className={DateUtility.isToday(date) ? styles.todayColumn : ''}
+                                    style={DateUtility.isToday(date) ? { minWidth: '120px' } : undefined}
+                                >
                                     <div className={styles.dayHeader} style={{ position: 'relative' }}>
                                         <span className={`${styles.dayName} ${DateUtility.isToday(date) ? styles.today : ''}`}>
                                             {DateUtility.getDayName(date)}
@@ -103,7 +107,7 @@ export const HabitTrackerHeader = forwardRef<HTMLTableSectionElement, HabitTrack
                                         </div>
                                     </div>
                                 </th>
-                                {isSaturday && loomSupported && (
+                                {isSunday && loomSupported && (
                                     <th className={styles.scoreHeader}>
                                         <button
                                             className={`${styles.vlogButton} ${hasVlog ? styles.hasVlog : ''}`}
@@ -122,7 +126,7 @@ export const HabitTrackerHeader = forwardRef<HTMLTableSectionElement, HabitTrack
                                         </button>
                                     </th>
                                 )}
-                                {isSaturday && !loomSupported && (
+                                {isSunday && !loomSupported && (
                                     <th className={styles.scoreHeader}></th>
                                 )}
                             </React.Fragment>

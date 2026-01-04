@@ -3,7 +3,6 @@
   overflow-y: auto;
   height: 100%;
   scroll-behavior: smooth;
-  direction: rtl; /* Make scroll container stick to the right */
 }
 
 .habitTable {
@@ -12,7 +11,6 @@
   border-collapse: separate;
   border-spacing: 0;
   min-width: max-content;
-  direction: ltr; /* Reset content to left-to-right */
 }
 
 .habitTable thead th {
@@ -158,6 +156,12 @@
   gap: 2px;
   min-width: 80px;
 }
+
+/* Today Column - 50% wider */
+.todayColumn {
+  min-width: 120px !important;
+}
+
 
 .dayName {
   font-size: 11px;

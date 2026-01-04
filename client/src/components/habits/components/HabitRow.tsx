@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Habit, HabitEntry } from '../../../types';
+import { DateUtility } from '../../../utils';
 import { HabitNameCell, type ReorderPosition } from './HabitNameCell';
 import { WeekSparkline } from './WeekSparkline';
 import { HabitCell } from './HabitCell';
@@ -87,11 +88,11 @@ export function HabitRow({
 
                 return week.days.map((date, idx) => {
                     const entry = getEntry(date, habit.id);
-                    const isSaturday = date.getDay() === 6;
+                    const isSunday = date.getDay() === 0; // Changed from Saturday since array is reversed
 
                     return (
                         <React.Fragment key={`${week.key}-${idx}`}>
-                            <td>
+                            <td style={DateUtility.isToday(date) ? { minWidth: '120px' } : undefined}>
                                 {(() => {
                                     const handlers = getCellHandlers(date, habit, entry);
                                     return (
@@ -106,7 +107,7 @@ export function HabitRow({
                                     );
                                 })()}
                             </td>
-                            {isSaturday && (() => {
+                            {isSunday && (() => {
                                 const weekStartDate = new Date(date.getTime() - 6 * 24 * 60 * 60 * 1000);
                                 const stats = getHabitStats(habit.id, weekStartDate, date);
                                 return (
