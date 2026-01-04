@@ -48,16 +48,18 @@ export function HabitRow({
     dynamicRowHeight
 }: HabitRowProps) {
 
+    const currentFailedStreak = getFailedStreak(habit.id);
+
     return (
         <tr
             className={dynamicRowHeight ? styles.dynamicRow : ''}
             style={dynamicRowHeight ? { height: `${dynamicRowHeight}px` } : undefined}
         >
-            <td>
+            <td className={currentFailedStreak > 2 ? styles.criticalStreak : undefined}>
                 <HabitNameCell
                     habit={habit}
                     streak={getCurrentStreak(habit.id)}
-                    failedStreak={getFailedStreak(habit.id)}
+                    failedStreak={currentFailedStreak}
                     onMouseEnter={(e: React.MouseEvent, id: string, comment?: string | null) => onHabitNameMouseEnter(e, id, comment)}
                     onMouseLeave={onHabitNameMouseLeave}
                     onReorderStart={onReorderStart}

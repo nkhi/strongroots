@@ -1,7 +1,8 @@
 import React, { useRef, useCallback } from 'react';
 import { HeartIcon, Warning, Clock } from '@phosphor-icons/react';
 import type { Habit } from '../../../types';
-import { HabitTimeIcon, HABIT_TIME_CONFIG } from './habitTimeConfig';
+import { HabitTimeIcon } from './habitTimeConfig';
+import { HABIT_TIME_CONFIG } from './constants';
 import styles from './HabitNameCell.module.css';
 
 export interface ReorderPosition {

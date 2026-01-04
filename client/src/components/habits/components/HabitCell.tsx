@@ -1,4 +1,5 @@
 import styles from '../HabitTracker.module.css';
+import { STATE_ICONS } from './constants';
 import type { Habit, HabitEntry } from '../../../types';
 
 interface HabitCellProps {
@@ -10,7 +11,7 @@ interface HabitCellProps {
     wasLongPress: () => boolean;
 }
 
-const STATE_ICONS = ['·', '✓', '✕', ':)', ':|'];
+
 
 export function HabitCell({
     date,

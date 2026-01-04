@@ -1,4 +1,4 @@
-import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './habitTimeConfig';
+import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './constants';
 import styles from '../HabitTracker.module.css';
 import { useState } from 'react';
 import ChartModal from './ChartModal';

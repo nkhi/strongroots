@@ -1,3 +1,15 @@
+import type { Icon } from '@phosphor-icons/react';
+import {
+    SunHorizonIcon,
+    MoonIcon,
+    TreeIcon,
+    BarbellIcon,
+    ResizeIcon,
+    AxeIcon,
+    ClockIcon
+} from '@phosphor-icons/react';
+import type { Habit } from '../../../types';
+
 export const GRADE_COLORS: Record<string, string> = {
     'gradeAPlus': '#10b981', 'gradeA': '#10b981', 'gradeAMinus': '#10b981',
     'gradeBPlus': '#0ea5e9', 'gradeB': '#0ea5e9', 'gradeBMinus': '#0ea5e9',
@@ -20,3 +32,110 @@ export const SPARKLINE_CONFIG = {
 export const HABIT_TRACKER_CONFIG = {
     startDate: new Date('2025-11-09T00:00:00')
 };
+
+// Distinct, high-contrast colors suitable for dark background
+export const CHART_COLORS = [
+    '#FF5252', // Red Accent
+    '#448AFF', // Blue Accent
+    '#69F0AE', // Green Accent
+    '#FFD740', // Amber Accent
+    '#E040FB', // Purple Accent
+    '#18FFFF', // Cyan Accent
+    '#FFAB40', // Orange Accent
+    '#FF4081', // Pink Accent
+    '#B2FF59', // Light Green Accent
+    '#7C4DFF', // Deep Purple Accent
+    '#64FFDA', // Teal Accent
+    '#FF6E40', // Deep Orange Accent
+    '#40C4FF', // Light Blue Accent
+    '#EEFF41', // Lime Accent
+    '#F44336', // Red
+    '#2196F3', // Blue
+    '#4CAF50', // Green
+    '#FFC107', // Amber
+    '#9C27B0', // Purple
+    '#00BCD4', // Cyan
+];
+
+export const STATE_ICONS = ['·', '✓', '✕', ':)', ':|'];
+
+// Extract the defaultTime type from the Habit interface
+export type HabitDefaultTime = Habit['defaultTime'];
+
+// Configuration for each habit time type
+export interface HabitTimeConfig {
+    icon: Icon | null;
+    color: string;
+    label: string;
+    showInFilter: boolean; // Some types like 'neither' and 'weekdays' shouldn't appear in filter
+}
+
+// Centralized mapping of defaultTime to icon, color, and label
+export const HABIT_TIME_CONFIG: Record<HabitDefaultTime, HabitTimeConfig> = {
+    morning: {
+        icon: SunHorizonIcon,
+        color: 'orange',
+        label: 'Morning habits',
+        showInFilter: true,
+    },
+    health: {
+        icon: TreeIcon,
+        color: '#1ba841',
+        label: 'Health habits',
+        showInFilter: true,
+    },
+    exercise: {
+        icon: BarbellIcon,
+        color: '#f4244d',
+        label: 'Exercise habits',
+        showInFilter: true,
+    },
+    growth: {
+        icon: ResizeIcon,
+        color: '#a855f7',
+        label: 'Growth habits',
+        showInFilter: true,
+    },
+    quitting: {
+        icon: AxeIcon,
+        color: '#f42697',
+        label: 'Stopping habits',
+        showInFilter: true,
+    },
+    night: {
+        icon: MoonIcon,
+        color: '#3ddde6',
+        label: 'Night habits',
+        showInFilter: true,
+    },
+    routine: {
+        icon: ClockIcon,
+        color: '#3ddde6',
+        label: 'Routine habits',
+        showInFilter: true,
+    },
+    // Types that exist but don't need filter buttons or visible icons
+    neither: {
+        icon: null,
+        color: 'transparent',
+        label: 'Other habits',
+        showInFilter: false,
+    },
+    weekdays: {
+        icon: null,
+        color: 'transparent',
+        label: 'Weekday habits',
+        showInFilter: false,
+    },
+};
+
+// Get the filter-visible time types in the order they should appear
+export const FILTER_TIME_TYPES: HabitDefaultTime[] = [
+    'morning',
+    'health',
+    'exercise',
+    'growth',
+    'quitting',
+    'night',
+    'routine',
+];

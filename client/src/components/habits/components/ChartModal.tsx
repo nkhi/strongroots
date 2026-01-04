@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import type { Habit } from '../../../types';
 import styles from '../HabitTracker.module.css';
+import { CHART_COLORS } from './constants';
 
 interface ChartModalProps {
     data: any[];
@@ -19,29 +20,7 @@ interface ChartModalProps {
     onClose: () => void;
 }
 
-// Distinct, high-contrast colors suitable for dark background
-const COLORS = [
-    '#FF5252', // Red Accent
-    '#448AFF', // Blue Accent
-    '#69F0AE', // Green Accent
-    '#FFD740', // Amber Accent
-    '#E040FB', // Purple Accent
-    '#18FFFF', // Cyan Accent
-    '#FFAB40', // Orange Accent
-    '#FF4081', // Pink Accent
-    '#B2FF59', // Light Green Accent
-    '#7C4DFF', // Deep Purple Accent
-    '#64FFDA', // Teal Accent
-    '#FF6E40', // Deep Orange Accent
-    '#40C4FF', // Light Blue Accent
-    '#EEFF41', // Lime Accent
-    '#F44336', // Red
-    '#2196F3', // Blue
-    '#4CAF50', // Green
-    '#FFC107', // Amber
-    '#9C27B0', // Purple
-    '#00BCD4', // Cyan
-];
+
 
 export default function ChartModal({ data, habits, onClose }: ChartModalProps) {
     const [highlightedHabitId, setHighlightedHabitId] = useState<string | null>(null);
@@ -167,7 +146,7 @@ export default function ChartModal({ data, habits, onClose }: ChartModalProps) {
                                 iconType="circle"
                             />
                             {habits.map((habit, index) => {
-                                const color = COLORS[index % COLORS.length];
+                                const color = CHART_COLORS[index % CHART_COLORS.length];
                                 const isHighlighted = highlightedHabitId === habit.id;
                                 const isDimmed = highlightedHabitId !== null && !isHighlighted;
 
