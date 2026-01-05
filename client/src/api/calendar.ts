@@ -1,6 +1,25 @@
+/**
+ * Calendar API
+ *
+ * REST wrappers + TanStack Query hooks for calendar endpoints.
+ *
+ * STRUCTURE:
+ *   1. Raw fetch functions (get*, create*, update*, delete*)
+ *   2. TanStack Query hooks (use* for queries, use*Mutation for mutations)
+ *
+ * TO ADD A NEW ENDPOINT:
+ *   1. Add the fetch function (use fetchWithErrorReporting)
+ *   2. Add a query key to queryKeys.ts if it's a GET
+ *   3. Add the corresponding useQuery/useMutation hook
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CalendarEvent } from '../types';
 import { fetchWithErrorReporting } from './errorReporter';
 import { API_BASE_URL } from '../config';
+import { queryKeys } from './queryKeys';
+
+// ============ Types ============
 
 export interface CalendarEventsResponse {
     success: boolean;
@@ -14,6 +33,8 @@ export interface CalendarSyncResponse {
     deleted: number;
     total: number;
 }
+
+// ============ REST API Functions ============
 
 export async function getCalendarEvents(date: Date): Promise<CalendarEvent[]> {
     const startOfDay = new Date(date);
@@ -63,3 +84,36 @@ export async function getCalendarEventsRange(
     return json.data || [];
 }
 
+// ============ TanStack Query Hooks ============
+
+function formatDateKey(date: Date): string {
+    return date.toISOString().split('T')[0];
+}
+
+export function useCalendarEventsForDate(date: Date, enabled = true) {
+    const dateStr = formatDateKey(date);
+    return useQuery({
+        queryKey: queryKeys.calendar.events(dateStr),
+        queryFn: () => getCalendarEvents(date),
+        enabled,
+    });
+}
+
+export function useCalendarEventsRange(startDate: Date, endDate: Date, enabled = true) {
+    const startStr = formatDateKey(startDate);
+    const endStr = formatDateKey(endDate);
+    return useQuery({
+        queryKey: queryKeys.calendar.range(startStr, endStr),
+        queryFn: () => getCalendarEventsRange(startDate, endDate),
+        enabled,
+    });
+}
+
+export function useSyncCalendar() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ daysBack, daysForward }: { daysBack?: number; daysForward?: number } = {}) =>
+            syncCalendarEvents(daysBack, daysForward),
+        onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.calendar.all }),
+    });
+}
