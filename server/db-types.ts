@@ -99,3 +99,10 @@ export interface DbCalendarEvent {
   created_at: Date | null;
   updated_at: Date | null;
 }
+
+export interface DbMemory {
+  id: string;
+  text: string;
+  date: Date;
+  created_at: Date | null;
+}

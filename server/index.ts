@@ -10,6 +10,7 @@ import diaryRoutes from './routes/diary.ts';
 import nextRoutes from './routes/next.ts';
 import listsRoutes from './routes/lists.ts';
 import calendarRoutes from './routes/calendar.ts';
+import memoriesRoutes from './routes/memories.ts';
 
 console.log('[SERVER] 🏁 Starting server process...');
 
@@ -84,6 +85,7 @@ app.use('/', diaryRoutes);
 app.use('/', nextRoutes);
 app.use('/', listsRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/', memoriesRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

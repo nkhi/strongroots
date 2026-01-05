@@ -120,3 +120,12 @@ CREATE TABLE public.calendar_events (
 	updated_at TIMESTAMPTZ NULL DEFAULT now(),
 	CONSTRAINT calendar_events_pkey PRIMARY KEY (id ASC)
 );
+
+DROP TABLE IF EXISTS "public"."memories";
+CREATE TABLE public.memories (
+	id STRING NOT NULL,
+	text STRING NOT NULL,
+	date DATE NOT NULL,
+	created_at TIMESTAMPTZ NULL DEFAULT now(),
+	CONSTRAINT memories_pkey PRIMARY KEY (id ASC)
+);

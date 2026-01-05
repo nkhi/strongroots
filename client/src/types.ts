@@ -10,6 +10,8 @@ export type {
   ListItem,
   List,
   CalendarEvent,
+  Memory,
+  CreateMemoryRequest,
   TasksByDate,
   GroupedTasks,
   TaskCounts,

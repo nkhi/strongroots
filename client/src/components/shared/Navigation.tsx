@@ -1,11 +1,13 @@
+import React from 'react';
 import { CalendarCheck, ListChecks, TipJarIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CarrotIcon, SunDim, VideoCameraIcon } from '@phosphor-icons/react';
 import { ServerStatus } from './ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../daylight/DaylightContext';
 import { NookButton } from '../nook/NookButton';
+import { MemoryButton } from '../memories/MemoryButton';
 import { useNavHotkeys } from '../../hooks/useNavHotkeys';
 
-export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs';
+export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs' | 'memories';
 
 interface NavigationProps {
     activeTab: TabType;
@@ -17,6 +19,7 @@ interface NavigationProps {
 export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }: NavigationProps) {
     const { themeColors } = useDaylight();
     useNavHotkeys({ onTabChange, workMode });
+    const [isMemoryPanelOpen, setIsMemoryPanelOpen] = React.useState(false);
 
     const capUrl = import.meta.env.VITE_CAP_URL;
 
@@ -89,6 +92,11 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                         >
                             <TreeIcon size={20} weight={activeTab === 'next' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
+                        <MemoryButton
+                            isPanelOpen={isMemoryPanelOpen}
+                            onToggle={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
+                            className={`${styles.tabBtn} ${isMemoryPanelOpen ? styles.active : ''}`}
+                        />
                         <button
                             className={`${styles.tabBtn} ${activeTab === 'vlogs' ? styles.active : ''}`}
                             onClick={() => window.open(capUrl, '_blank')}

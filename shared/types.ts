@@ -105,6 +105,13 @@ export interface CalendarEvent {
   html_link: string;
 }
 
+export interface Memory {
+  id: string;
+  text: string;
+  date: string;
+  createdAt: string | null;
+}
+
 // ============================================
 // Aggregate/Collection Types
 // ============================================
@@ -257,6 +264,13 @@ export interface UpdateListRequest {
   color?: string;
   order?: string;
   items?: ListItem[];
+}
+
+export interface CreateMemoryRequest {
+  id: string;
+  text: string;
+  date: string;
+  createdAt?: string;
 }
 
 // ============================================
