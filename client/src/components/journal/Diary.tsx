@@ -203,7 +203,7 @@ export function Diary() {
             const answer = entry ? entry.answer : '';
 
             return (
-              <div key={question.id} className={`${styles.diaryCard} ${answer ? styles.diaryCardFilled : ''}`}>
+              <div key={question.id} className={`${styles.diaryCard} ${answer ? styles.diaryCardFilled : styles.diaryCardUnfilled}`}>
                 <div className={styles.diaryQuestion}>
                   {answer ? (
                     <CheckSquare size={20} weight="duotone" color="#158e66ff" />
