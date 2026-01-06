@@ -1,12 +1,47 @@
+/**
+ * Tasks API
+ *
+ * REST wrappers + TanStack Query hooks for task endpoints.
+ *
+ * STRUCTURE:
+ *   1. Raw fetch functions (get*, create*, update*, delete*)
+ *   2. TanStack Query hooks (use* for queries, use*Mutation for mutations)
+ *
+ * TO ADD A NEW ENDPOINT:
+ *   1. Add the fetch function (use fetchWithErrorReporting)
+ *   2. Add a query key to queryKeys.ts if it's a GET
+ *   3. Add the corresponding useQuery/useMutation hook
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Task } from '../types';
 import { fetchWithErrorReporting } from './errorReporter';
 import { API_BASE_URL } from '../config';
+import { queryKeys } from './queryKeys';
+
+// ============ Types ============
 
 export type GroupedTasks = Record<string, {
   active: Task[];
   completed: Task[];
   failed: Task[];
 }>;
+
+export type TaskCounts = Record<string, {
+  active: number;
+  completed: number;
+  failed: number;
+}>;
+
+export interface ReorderMove {
+  id: string;
+  order: string;
+  date?: string;
+  category?: 'life' | 'work';
+  state?: 'active' | 'completed' | 'failed';
+}
+
+// ============ REST API Functions ============
 
 export async function getTasks(): Promise<Record<string, Task[]>> {
   const response = await fetchWithErrorReporting(`${API_BASE_URL}/tasks`);
@@ -34,12 +69,6 @@ export async function getGroupedTasks(category?: 'life' | 'work'): Promise<Group
   if (!response.ok) throw new Error('Failed to fetch grouped tasks');
   return response.json();
 }
-
-export type TaskCounts = Record<string, {
-  active: number;
-  completed: number;
-  failed: number;
-}>;
 
 export async function getTaskCounts(category?: 'life' | 'work'): Promise<TaskCounts> {
   const url = category
@@ -122,14 +151,6 @@ export async function reorderTask(
   return response.json();
 }
 
-export interface ReorderMove {
-  id: string;
-  order: string;
-  date?: string;
-  category?: 'life' | 'work';
-  state?: 'active' | 'completed' | 'failed';
-}
-
 export async function batchReorderTasks(moves: ReorderMove[]): Promise<void> {
   const response = await fetchWithErrorReporting(`${API_BASE_URL}/tasks/batch/reorder`, {
     method: 'POST',
@@ -167,4 +188,127 @@ export async function resurrectTask(id: string, date: string): Promise<Task> {
   });
   if (!response.ok) throw new Error('Failed to resurrect task');
   return response.json();
+}
+
+// ============ TanStack Query Hooks ============
+
+export function useTasks(workMode: boolean) {
+  return useQuery({
+    queryKey: queryKeys.tasks.list(workMode),
+    queryFn: () => workMode ? getWorkTasks() : getTasks(),
+  });
+}
+
+export function useTasksForWeek(start: string, end: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.tasks.week(start, end),
+    queryFn: () => getTasksForWeek(start, end),
+    enabled,
+  });
+}
+
+export function useGroupedTasks(category?: 'life' | 'work') {
+  return useQuery({
+    queryKey: queryKeys.tasks.grouped(category),
+    queryFn: () => getGroupedTasks(category),
+  });
+}
+
+export function useTaskCounts(category?: 'life' | 'work') {
+  return useQuery({
+    queryKey: queryKeys.tasks.counts(category),
+    queryFn: () => getTaskCounts(category),
+  });
+}
+
+export function useGraveyardTasks(workMode: boolean, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.tasks.graveyard(workMode),
+    queryFn: () => workMode ? getWorkGraveyardTasks() : getGraveyardTasks(),
+    enabled,
+  });
+}
+
+export function useCreateTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createTask,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useUpdateTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Task> }) =>
+      updateTask(id, updates),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useDeleteTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: deleteTask,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useBatchPuntTasks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskIds, sourceDate, targetDate }: { taskIds: string[]; sourceDate: string; targetDate: string }) =>
+      batchPuntTasks(taskIds, sourceDate, targetDate),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useBatchFailTasks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: batchFailTasks,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useBatchGraveyardTasks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: batchGraveyardTasks,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useReorderTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, order, options }: { id: string; order: string; options?: { date?: string; category?: 'life' | 'work'; state?: 'active' | 'completed' | 'failed' } }) =>
+      reorderTask(id, order, options),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useBatchReorderTasks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: batchReorderTasks,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useGraveyardTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: graveyardTask,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
+}
+
+export function useResurrectTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, date }: { id: string; date: string }) =>
+      resurrectTask(id, date),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  });
 }

@@ -1,6 +1,25 @@
+/**
+ * Habits API
+ *
+ * REST wrappers + TanStack Query hooks for habits endpoints.
+ *
+ * STRUCTURE:
+ *   1. Raw fetch functions (get*, create*, update*, delete*)
+ *   2. TanStack Query hooks (use* for queries, use*Mutation for mutations)
+ *
+ * TO ADD A NEW ENDPOINT:
+ *   1. Add the fetch function (use fetchWithErrorReporting)
+ *   2. Add a query key to queryKeys.ts if it's a GET
+ *   3. Add the corresponding useQuery/useMutation hook
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Habit, HabitEntry } from '../types';
 import { fetchWithErrorReporting } from './errorReporter';
 import { API_BASE_URL } from '../config';
+import { queryKeys } from './queryKeys';
+
+// ============ REST API Functions ============
 
 export async function getHabits(): Promise<Habit[]> {
   const response = await fetchWithErrorReporting(`${API_BASE_URL}/habits`);
@@ -44,4 +63,46 @@ export async function reorderHabit(habitId: string, targetHabitId: string | null
     body: JSON.stringify({ targetHabitId })
   });
   if (!response.ok) throw new Error('Failed to reorder habit');
+}
+
+// ============ TanStack Query Hooks ============
+
+export function useHabits() {
+  return useQuery({
+    queryKey: queryKeys.habits.list(),
+    queryFn: getHabits,
+  });
+}
+
+export function useHabitEntries(from: string, to: string) {
+  return useQuery({
+    queryKey: queryKeys.habits.entries(from, to),
+    queryFn: () => getEntries(from, to),
+  });
+}
+
+export function useSaveEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: saveEntry,
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.habits.all }),
+  });
+}
+
+export function useUpdateEntryComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ entryId, comment }: { entryId: string; comment: string | null }) =>
+      updateEntryComment(entryId, comment),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.habits.all }),
+  });
+}
+
+export function useReorderHabit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ habitId, targetHabitId }: { habitId: string; targetHabitId: string | null }) =>
+      reorderHabit(habitId, targetHabitId),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.habits.all }),
+  });
 }
