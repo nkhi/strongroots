@@ -251,6 +251,7 @@ export function DayWeek({
         const todayStr = DateUtility.formatDate(new Date());
         const isToday = focusedDateStr === todayStr;
         const isPast = focusedDateStr < todayStr;
+        const hasGraveyard = !!onGraveyardClick;
 
         let rotationClass = '';
         if (isToday) rotationClass = styles.pointUp;
@@ -258,7 +259,7 @@ export function DayWeek({
 
         return (
           <button
-            className={`${styles.todayFloatingBtn} ${isToday ? styles.isToday : ''}`}
+            className={`${styles.todayFloatingBtn} ${isToday ? styles.isToday : ''} ${!hasGraveyard ? styles.noGraveyard : ''}`}
             onClick={() => scrollToToday()}
             title="Back to Today"
           >

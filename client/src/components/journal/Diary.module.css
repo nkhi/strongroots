@@ -12,7 +12,8 @@
   min-width: 70vw;
   width: 70vw;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1.5rem 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   scroll-snap-align: center;
@@ -32,9 +33,9 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .diaryDate {
@@ -51,6 +52,34 @@
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.45);
   font-weight: 500;
+}
+
+/* Wrapper to match CalendarPopover structure */
+.completionStatusWrapper {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+/* Button styling to match CalendarPopover's calendarBtn */
+.completionStatusIcon {
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: default;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.completionStatusIcon.complete {
+  color: #34D399;
+}
+
+.completionStatusIcon.incomplete {
+  color: #FF3B30;
 }
 
 .diaryContent {
@@ -78,6 +107,17 @@
 .diaryCard:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Filled state - subtle green tint for answered questions */
+.diaryCardFilled {
+  background: rgba(21, 142, 102, 0.08);
+  border-color: rgba(21, 142, 102, 0.15);
+}
+
+.diaryCardFilled:hover {
+  background: rgba(21, 142, 102, 0.12);
+  border-color: rgba(21, 142, 102, 0.22);
 }
 
 .diaryQuestion {
@@ -203,11 +243,11 @@
     min-width: 90vw;
     width: 90vw;
   }
-  
+
   .timeInputRow {
     flex-direction: column;
   }
-  
+
   .timeInputValue {
     font-size: 1.2rem;
   }

@@ -78,11 +78,11 @@ export function QuestionView({ onBack }: QuestionViewProps) {
 
             {/* Back Button */}
             <button
-                className={dayWeekStyles.todayFloatingBtn}
+                className={dayWeekStyles.zoomFloatingBtn}
                 onClick={onBack}
                 title="Back to Day View"
             >
-                <ArrowCircleLeft weight="duotone" size={20} className={dayWeekStyles.todayIcon} />
+                <ArrowCircleLeft weight="duotone" size={20} />
                 <span>Day View</span>
             </button>
         </div>

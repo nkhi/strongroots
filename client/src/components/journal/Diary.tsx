@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Square, CheckSquare } from '@phosphor-icons/react';
+import { Square, CheckSquare, Check, X } from '@phosphor-icons/react';
 import { getQuestions, getDiary, saveDiaryEntry, saveQuestion } from '../../api/diary';
 import type { DiaryEntry, Question } from '../../types';
 import { generateId } from '../../utils';
@@ -150,6 +150,9 @@ export function Diary() {
     const wakeEntry = dayEntries.find(e => e.questionId === TIME_QUESTION_IDS.WAKE);
     const sleepEntry = dayEntries.find(e => e.questionId === TIME_QUESTION_IDS.SLEEP);
 
+    // Calculate completion status - count questions with non-empty answers
+    const answeredCount = dayEntries.filter(e => e.answer && e.answer.trim().length > 0).length;
+    const isComplete = answeredCount >= 5;
 
     return (
       <>
@@ -157,6 +160,18 @@ export function Diary() {
           <span className={`${styles.diaryDate} ${isToday ? 'today' : ''}`}>
             {date.toLocaleDateString('en-US', { weekday: 'long' })}, {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
+          <div className={styles.completionStatusWrapper}>
+            <button
+              type="button"
+              className={`${styles.completionStatusIcon} ${isComplete ? styles.complete : styles.incomplete}`}
+            >
+              {isComplete ? (
+                <Check size={18} weight="bold" />
+              ) : (
+                <X size={18} weight="bold" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className={styles.diaryContent}>
@@ -188,7 +203,7 @@ export function Diary() {
             const answer = entry ? entry.answer : '';
 
             return (
-              <div key={question.id} className={styles.diaryCard}>
+              <div key={question.id} className={`${styles.diaryCard} ${answer ? styles.diaryCardFilled : ''}`}>
                 <div className={styles.diaryQuestion}>
                   {answer ? (
                     <CheckSquare size={20} weight="duotone" color="#158e66ff" />
@@ -235,6 +250,7 @@ export function Diary() {
       className={styles.diaryScrollContainer}
       columnClassName={styles.diaryColumn}
       onMoreClick={() => setViewMode('question')}
+      moreOverride="Summary"
     />
   );
 }
