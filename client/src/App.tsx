@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import { HabitTracker } from './components/habits/HabitTracker';
 import { Todos } from './components/todos/Todos';
-import { JournalV2 } from './components/journalV2';
+// import { JournalV2 } from './components/journalV2';
+import { Diary } from './components/journal/Diary';
 import { Next } from './components/grow/Next';
 import { Lists } from './components/lists/Lists';
 import { Memos } from './components/memos/Memos';
@@ -57,7 +58,7 @@ function AppContent() {
           {activeTab === 'daylight' && <Daylight workMode={WORK_MODE} />}
           {!WORK_MODE && activeTab === 'habits' && <HabitTracker />}
           {!WORK_MODE && activeTab === 'memos' && <Memos />}
-          {!WORK_MODE && activeTab === 'journal' && <JournalV2 />}
+          {!WORK_MODE && activeTab === 'journal' && <Diary />}
           {!WORK_MODE && activeTab === 'next' && <Next />}
           {!WORK_MODE && activeTab === 'lists' && <Lists />}
         </main>

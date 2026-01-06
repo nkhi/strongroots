@@ -155,10 +155,7 @@ export function Diary() {
       <>
         <div className={styles.diaryColumnHeader}>
           <span className={`${styles.diaryDate} ${isToday ? 'today' : ''}`}>
-            {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-          <span className={styles.diaryDayName}>
-            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+            {date.toLocaleDateString('en-US', { weekday: 'long' })}, {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         </div>
 

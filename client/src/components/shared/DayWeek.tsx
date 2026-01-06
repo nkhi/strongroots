@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, type ReactNode } from 'react';
 import { DateUtility } from '../../utils';
 import { ArrowCircleLeft, StrategyIcon, Ghost } from '@phosphor-icons/react';
 import styles from './DayWeek.module.css';
@@ -90,6 +90,7 @@ export function DayWeek({
 }: DayWeekProps) {
   const [dates, setDates] = useState<Date[]>([]);
   const [focusedDateStr, setFocusedDateStr] = useState<string>('');
+  const [isReady, setIsReady] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -100,6 +101,14 @@ export function DayWeek({
   useEffect(() => {
     initializeDates();
   }, [workMode]);
+
+  // Set initial scroll position before paint to avoid visual jump
+  useLayoutEffect(() => {
+    if (dates.length > 0 && scrollContainerRef.current && !isReady) {
+      scrollToToday(true);
+      setIsReady(true);
+    }
+  }, [dates]);
 
   function initializeDates() {
     const allDates = DateUtility.getAllDatesFromStart(startDate);
@@ -124,9 +133,6 @@ export function DayWeek({
     }
 
     setDates(finalDates);
-
-    // Scroll to today after dates are set
-    setTimeout(() => scrollToToday(), 100);
   }
 
   // Set up intersection observer
@@ -161,7 +167,7 @@ export function DayWeek({
     return () => observerRef.current?.disconnect();
   }, [dates, columnClass]);
 
-  function scrollToToday() {
+  function scrollToToday(instant = false) {
     if (scrollContainerRef.current) {
       let todayEl = scrollContainerRef.current.querySelector('.today');
 
@@ -181,13 +187,21 @@ export function DayWeek({
       }
 
       if (todayEl) {
-        todayEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        todayEl.scrollIntoView({
+          behavior: instant ? 'instant' : 'smooth',
+          inline: 'center',
+          block: 'nearest'
+        });
       }
     }
   }
 
   return (
-    <div className={containerClass} ref={scrollContainerRef}>
+    <div
+      className={containerClass}
+      ref={scrollContainerRef}
+      style={{ visibility: isReady ? 'visible' : 'hidden' }}
+    >
       {dates.map(date => {
         const dateStr = DateUtility.formatDate(date);
         const isToday = DateUtility.isToday(date);
