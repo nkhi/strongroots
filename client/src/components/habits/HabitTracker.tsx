@@ -16,7 +16,7 @@ import { HabitTooltips } from './components/HabitTooltips';
 import styles from './HabitTracker.module.css';
 
 import { HABIT_TRACKER_CONFIG } from './components/constants';
-import { CRITICAL_FILTER } from './components/TimeFilterButtons';
+import { CRITICAL_FILTER, UNFINISHED_FILTER } from './components/TimeFilterButtons';
 
 export function HabitTracker() {
   const tableWrapperRef = useRef<HTMLDivElement>(null);
@@ -120,8 +120,15 @@ export function HabitTracker() {
     if (selectedTimeFilter === CRITICAL_FILTER) {
       return habits.filter(habit => getFailedStreak(habit.id) > 2);
     }
+    if (selectedTimeFilter === UNFINISHED_FILTER) {
+      const today = new Date();
+      return habits.filter(habit => {
+        const entry = getEntry(today, habit.id);
+        return !entry || entry.state === 0;
+      });
+    }
     return habits.filter(habit => habit.defaultTime === selectedTimeFilter);
-  }, [habits, selectedTimeFilter, getFailedStreak]);
+  }, [habits, selectedTimeFilter, getFailedStreak, getEntry]);
 
   useEffect(() => {
     if (!selectedTimeFilter) {

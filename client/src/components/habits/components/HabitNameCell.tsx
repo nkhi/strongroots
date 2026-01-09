@@ -58,9 +58,9 @@ export function HabitNameCell({ habit, streak, failedStreak, onMouseEnter, onMou
     // logic: use config color for badge border/text if available
     const timeConfig = HABIT_TIME_CONFIG[habit.defaultTime];
     const badgeStyle = timeBadge && timeConfig ? {
-        borderColor: timeConfig.color === 'transparent' ? undefined : timeConfig.color,
+        borderColor: isRoutine ? undefined : (timeConfig.color === 'transparent' ? undefined : timeConfig.color),
         color: timeConfig.color === 'transparent' ? undefined : timeConfig.color,
-        background: timeConfig.color === 'transparent' ? undefined : `${timeConfig.color}20` // 20 hex = ~12% opacity
+        background: isRoutine ? undefined : (timeConfig.color === 'transparent' ? undefined : `${timeConfig.color}20`) // Routine background is handled in CSS
     } : undefined;
 
     // Long press handlers

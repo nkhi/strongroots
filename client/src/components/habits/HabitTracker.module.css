@@ -482,6 +482,16 @@
   color: #facc15;
 }
 
+.timeFilterBtn[data-color="#e0f2fe"]:hover,
+.timeFilterBtn[data-color="#e0f2fe"].active {
+  color: #e0f2fe;
+}
+
+.timeFilterBtn[data-color="#ef4444"]:hover,
+.timeFilterBtn[data-color="#ef4444"].active {
+  color: #ef4444;
+}
+
 /* Show All Button - always visible when rendered */
 .showAllBtn {
   opacity: 1 !important;

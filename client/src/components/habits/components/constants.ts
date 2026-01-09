@@ -110,7 +110,7 @@ export const HABIT_TIME_CONFIG: Record<HabitDefaultTime, HabitTimeConfig> = {
     },
     routine: {
         icon: ClockIcon,
-        color: '#3ddde6',
+        color: '#e0f2fe',
         label: 'Routine',
         showInFilter: true,
     },

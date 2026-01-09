@@ -1,4 +1,4 @@
-import { WarningIcon } from '@phosphor-icons/react';
+import { WarningIcon, FlagIcon } from '@phosphor-icons/react';
 import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './constants';
 import styles from '../HabitTracker.module.css';
 import { useState } from 'react';
@@ -7,6 +7,7 @@ import { useHoldProgress } from '../../../hooks/useHoldProgress';
 import { HOLD_DURATIONS } from '../../../constants/holdDurations';
 
 export const CRITICAL_FILTER = 'critical';
+export const UNFINISHED_FILTER = 'unfinished';
 
 interface TimeFilterButtonsProps {
     selectedTimeFilter: string | null;
@@ -59,6 +60,10 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
         onFilterChange(selectedTimeFilter === CRITICAL_FILTER ? null : CRITICAL_FILTER);
     };
 
+    const handleUnfinishedClick = () => {
+        onFilterChange(selectedTimeFilter === UNFINISHED_FILTER ? null : UNFINISHED_FILTER);
+    };
+
     return (
         <>
             <div className={styles.timeFilterButtons}>
@@ -92,6 +97,16 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                     onClick={handleCriticalClick}
                 >
                     <WarningIcon size={18} weight="duotone" />
+                </FilterButton>
+
+                <FilterButton
+                    isActive={selectedTimeFilter === UNFINISHED_FILTER}
+                    color="#ef4444"
+                    title="Unfinished today"
+                    label="Unfinished"
+                    onClick={handleUnfinishedClick}
+                >
+                    <FlagIcon size={18} weight="duotone" />
                 </FilterButton>
 
                 {/* Separator */}
