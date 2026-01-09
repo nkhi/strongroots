@@ -95,6 +95,7 @@ export function HabitTracker() {
 
 
   const [selectedTimeFilter, setSelectedTimeFilter] = useState<string | null>(null);
+  const [frozenFilterIds, setFrozenFilterIds] = useState<Set<string> | null>(null);
   const [dynamicRowHeight, setDynamicRowHeight] = useState<number | null>(null);
 
 
@@ -115,20 +116,50 @@ export function HabitTracker() {
   }, [weeks, loadVlogs]); // Trigger when weeks structure changes
 
 
-  const filteredHabits = useMemo(() => {
-    if (!selectedTimeFilter) return habits;
-    if (selectedTimeFilter === CRITICAL_FILTER) {
-      return habits.filter(habit => getFailedStreak(habit.id) > 2);
+  // Handle filter changes by taking a snapshot of matching habits
+  const handleFilterChange = (filter: string | null) => {
+    setSelectedTimeFilter(filter);
+
+    // If clearing filter, clear frozen IDs
+    if (!filter) {
+      setFrozenFilterIds(null);
+      return;
     }
-    if (selectedTimeFilter === UNFINISHED_FILTER) {
+
+    // Capture the ids that match the *current* state at the moment of clicking
+    let matchedIds: string[] = [];
+
+    if (filter === CRITICAL_FILTER) {
+      matchedIds = habits
+        .filter(habit => getFailedStreak(habit.id) > 2)
+        .map(h => h.id);
+    } else if (filter === UNFINISHED_FILTER) {
       const today = new Date();
-      return habits.filter(habit => {
-        const entry = getEntry(today, habit.id);
-        return !entry || entry.state === 0;
-      });
+      matchedIds = habits
+        .filter(habit => {
+          const entry = getEntry(today, habit.id);
+          return !entry || entry.state === 0;
+        })
+        .map(h => h.id);
+    } else {
+      matchedIds = habits
+        .filter(habit => habit.defaultTime === filter)
+        .map(h => h.id);
     }
-    return habits.filter(habit => habit.defaultTime === selectedTimeFilter);
-  }, [habits, selectedTimeFilter, getFailedStreak, getEntry]);
+
+    setFrozenFilterIds(new Set(matchedIds));
+  };
+
+
+  const filteredHabits = useMemo(() => {
+    // If we have frozen IDs (active filter), only show those
+    if (frozenFilterIds && selectedTimeFilter) {
+      return habits.filter(habit => frozenFilterIds.has(habit.id));
+    }
+
+    // Fallback for "Show All" or if for some reason frozen stats are missing (shouldn't happen with logic above)
+    return habits;
+  }, [habits, frozenFilterIds, selectedTimeFilter]);
 
   useEffect(() => {
     if (!selectedTimeFilter) {
@@ -197,7 +228,7 @@ export function HabitTracker() {
             vlogs={vlogs}
             loomSupported={loomSupported}
             selectedTimeFilter={selectedTimeFilter}
-            onFilterChange={setSelectedTimeFilter}
+            onFilterChange={handleFilterChange}
             chartData={chartData}
             habits={habits}
             onToggleWeek={toggleWeek}
