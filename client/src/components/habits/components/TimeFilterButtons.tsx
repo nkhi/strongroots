@@ -88,10 +88,13 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                     );
                 })}
 
+                {/* Separator between Routine and Critical */}
+                <span className={styles.filterSeparator} />
+
                 {/* Critical Streak Filter - Warning Icon */}
                 <FilterButton
                     isActive={selectedTimeFilter === CRITICAL_FILTER}
-                    color="#facc15"
+                    color="#ef4444"
                     title="Critical streaks (failed 3+ days)"
                     label="Critical"
                     onClick={handleCriticalClick}
@@ -101,7 +104,7 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
 
                 <FilterButton
                     isActive={selectedTimeFilter === UNFINISHED_FILTER}
-                    color="#ef4444"
+                    color="#facc15"
                     title="Unfinished today"
                     label="Unfinished"
                     onClick={handleUnfinishedClick}
@@ -109,8 +112,6 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                     <FlagIcon size={18} weight="duotone" />
                 </FilterButton>
 
-                {/* Separator */}
-                <span className={styles.filterSeparator} />
             </div>
 
 

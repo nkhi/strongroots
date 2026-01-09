@@ -40,6 +40,7 @@
   background: #110C09 !important;
   z-index: 11;
   color: white;
+  border-right: 1px solid #363029;
 }
 
 .habitTable tbody td {
@@ -413,6 +414,7 @@
   gap: 4px;
   padding: 4px;
   padding-left: 10px;
+  padding-right: 40px;
 }
 
 .timeFilterBtn {
@@ -427,6 +429,14 @@
   transition: all 0.2s ease;
   opacity: 25;
   color: #555;
+}
+
+.filterSeparator {
+  width: 1px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 0 4px;
+  display: inline-block;
 }
 
 /* When hovering over the header cell, show all buttons as gray */
