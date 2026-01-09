@@ -409,9 +409,10 @@
 .timeFilterButtons {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 4px;
   padding: 4px;
+  padding-left: 10px;
 }
 
 .timeFilterBtn {
@@ -424,7 +425,7 @@
   justify-content: center;
   border-radius: 6px;
   transition: all 0.2s ease;
-  opacity: 0;
+  opacity: 25;
   color: #555;
 }
 
@@ -474,6 +475,11 @@
 .timeFilterBtn[data-color="#f42697"]:hover,
 .timeFilterBtn[data-color="#f42697"].active {
   color: #f42697;
+}
+
+.timeFilterBtn[data-color="#facc15"]:hover,
+.timeFilterBtn[data-color="#facc15"].active {
+  color: #facc15;
 }
 
 /* Show All Button - always visible when rendered */

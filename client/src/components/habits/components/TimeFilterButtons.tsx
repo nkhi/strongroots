@@ -1,7 +1,10 @@
+import { WarningIcon } from '@phosphor-icons/react';
 import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './constants';
 import styles from '../HabitTracker.module.css';
 import { useState } from 'react';
 import ChartModal from './ChartModal';
+
+export const CRITICAL_FILTER = 'critical';
 
 interface TimeFilterButtonsProps {
     selectedTimeFilter: string | null;
@@ -16,6 +19,10 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
     const handleFilterClick = (timeType: HabitDefaultTime) => {
         // Toggle: if already selected, clear filter; otherwise set filter
         onFilterChange(selectedTimeFilter === timeType ? null : timeType);
+    };
+
+    const handleCriticalClick = () => {
+        onFilterChange(selectedTimeFilter === CRITICAL_FILTER ? null : CRITICAL_FILTER);
     };
 
     return (
@@ -40,6 +47,16 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                         </button>
                     );
                 })}
+
+                {/* Critical Streak Filter - Warning Icon */}
+                <button
+                    className={`${styles.timeFilterBtn} ${selectedTimeFilter === CRITICAL_FILTER ? styles.active : ''}`}
+                    onClick={handleCriticalClick}
+                    title="Critical streaks (failed 3+ days)"
+                    data-color="#facc15"
+                >
+                    <WarningIcon size={18} weight="duotone" />
+                </button>
 
                 {/* Show All / Clear Filter Button */}
                 {/* <button
