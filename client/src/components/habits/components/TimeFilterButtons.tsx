@@ -3,6 +3,8 @@ import { HABIT_TIME_CONFIG, FILTER_TIME_TYPES, type HabitDefaultTime } from './c
 import styles from '../HabitTracker.module.css';
 import { useState } from 'react';
 import ChartModal from './ChartModal';
+import { useHoldProgress } from '../../../hooks/useHoldProgress';
+import { HOLD_DURATIONS } from '../../../constants/holdDurations';
 
 export const CRITICAL_FILTER = 'critical';
 
@@ -13,11 +15,41 @@ interface TimeFilterButtonsProps {
     habits: any;
 }
 
+interface FilterButtonProps {
+    isActive: boolean;
+    color: string;
+    title: string;
+    onClick: () => void;
+    children: React.ReactNode;
+}
+
+function FilterButton({ isActive, color, title, onClick, children }: FilterButtonProps) {
+    const { holdProps, Ring } = useHoldProgress({
+        duration: HOLD_DURATIONS.TIME_FILTER,
+        trigger: 'hover',
+        color,
+        onComplete: onClick,
+    });
+
+    return (
+        <>
+            <button
+                className={`${styles.timeFilterBtn} ${isActive ? styles.active : ''}`}
+                title={title}
+                data-color={color}
+                {...holdProps}
+            >
+                {children}
+            </button>
+            <Ring />
+        </>
+    );
+}
+
 export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartData, habits }: TimeFilterButtonsProps) {
     const [showChart, setShowChart] = useState(false);
 
     const handleFilterClick = (timeType: HabitDefaultTime) => {
-        // Toggle: if already selected, clear filter; otherwise set filter
         onFilterChange(selectedTimeFilter === timeType ? null : timeType);
     };
 
@@ -36,51 +68,30 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                     if (!IconComponent) return null;
 
                     return (
-                        <button
+                        <FilterButton
                             key={timeType}
-                            className={`${styles.timeFilterBtn} ${isActive ? styles.active : ''}`}
-                            onClick={() => handleFilterClick(timeType)}
+                            isActive={isActive}
+                            color={config.color}
                             title={config.label}
-                            data-color={config.color}
+                            onClick={() => handleFilterClick(timeType)}
                         >
                             <IconComponent size={18} weight="duotone" />
-                        </button>
+                        </FilterButton>
                     );
                 })}
 
                 {/* Critical Streak Filter - Warning Icon */}
-                <button
-                    className={`${styles.timeFilterBtn} ${selectedTimeFilter === CRITICAL_FILTER ? styles.active : ''}`}
-                    onClick={handleCriticalClick}
+                <FilterButton
+                    isActive={selectedTimeFilter === CRITICAL_FILTER}
+                    color="#facc15"
                     title="Critical streaks (failed 3+ days)"
-                    data-color="#facc15"
+                    onClick={handleCriticalClick}
                 >
                     <WarningIcon size={18} weight="duotone" />
-                </button>
-
-                {/* Show All / Clear Filter Button */}
-                {/* <button
-                    className={`${styles.timeFilterBtn} ${!selectedTimeFilter ? styles.inactive : ''}`}
-                    onClick={() => onFilterChange(null)}
-                    title="Show all habits"
-                    data-color="white"
-                    disabled={!selectedTimeFilter}
-                >
-                    <X size={18} color={selectedTimeFilter ? '#ffffff' : '#ffffff00'} />
-                </button> */}
+                </FilterButton>
 
                 {/* Separator */}
                 <span className={styles.filterSeparator} />
-
-                {/* Trends Button */}
-                {/* <button
-                    className={styles.timeFilterBtn}
-                    onClick={() => setShowChart(true)}
-                    title="View Trends"
-                    data-color="#6366f1"
-                >
-                    <PresentationChartIcon size={18} weight="duotone" />
-                </button> */}
             </div>
 
 

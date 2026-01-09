@@ -1,0 +1,1 @@
+export { HoldProgressRing } from './HoldProgressRing';

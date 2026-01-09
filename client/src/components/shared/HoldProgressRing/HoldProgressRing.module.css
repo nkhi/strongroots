@@ -1,0 +1,11 @@
+.container {
+    position: fixed;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+}
+
+.svg {
+    transform: rotate(-90deg);
+    display: block;
+}

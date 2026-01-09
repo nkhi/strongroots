@@ -1,11 +1,13 @@
 import React from 'react';
-import { CalendarCheck, ListChecks, TipJarIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CarrotIcon, SunDim, VideoCameraIcon } from '@phosphor-icons/react';
+import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, SunDim, VideoCameraIcon } from '@phosphor-icons/react';
 import { ServerStatus } from './ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../daylight/DaylightContext';
 import { NookButton } from '../nook/NookButton';
 import { MemoryButton } from '../memories/MemoryButton';
 import { useNavHotkeys } from '../../hooks/useNavHotkeys';
+import { useHoldProgress } from '../../hooks/useHoldProgress';
+import { HOLD_DURATIONS } from '../../constants/holdDurations';
 
 export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs' | 'memories';
 
@@ -14,6 +16,58 @@ interface NavigationProps {
     lastTab?: TabType;
     onTabChange: (tab: TabType) => void;
     workMode?: boolean;
+}
+
+// Wrapper for external links with hold progress
+interface HoldLinkProps {
+    href: string;
+    color: string;
+    children: React.ReactNode;
+    className?: string;
+}
+
+function HoldLink({ href, color, children, className }: HoldLinkProps) {
+    const { holdProps, Ring } = useHoldProgress({
+        duration: HOLD_DURATIONS.NAV_LINK,
+        trigger: 'hover',
+        color,
+        onComplete: () => window.open(href, '_blank'),
+    });
+
+    return (
+        <>
+            <span className={className} {...holdProps}>
+                {children}
+            </span>
+            <Ring />
+        </>
+    );
+}
+
+// Wrapper for daylight button with hold progress
+interface HoldButtonProps {
+    onClick: () => void;
+    color: string;
+    children: React.ReactNode;
+    className?: string;
+}
+
+function HoldButton({ onClick, color, children, className }: HoldButtonProps) {
+    const { holdProps, Ring } = useHoldProgress({
+        duration: HOLD_DURATIONS.NAV_LINK,
+        trigger: 'hover',
+        color,
+        onComplete: onClick,
+    });
+
+    return (
+        <>
+            <button className={className} {...holdProps}>
+                {children}
+            </button>
+            <Ring />
+        </>
+    );
 }
 
 export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }: NavigationProps) {
@@ -41,9 +95,13 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
             style={navStyle}
         >
             <div className={styles.leftSection}>
-                <button onClick={handleDaylightClick} className={styles.tabBtn}>
+                <HoldButton
+                    onClick={handleDaylightClick}
+                    className={styles.tabBtn}
+                    color="#f59e0b"
+                >
                     <SunDim size={20} weight="duotone" />
-                </button>
+                </HoldButton>
 
                 <NookButton />
 
@@ -109,16 +167,23 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
 
             {!workMode && (
                 <div className={styles.rightLinks}>
-                    <a href="https://central.karat.io/interviewer/dashboard" target="_blank" rel="noreferrer" className={styles.iconLink}>
-                        <CarrotIcon size={20} weight="duotone" />
-                    </a>
-                    <a href="https://app.monarchmoney.com/accounts?chartType=performance&dateRange=6M&timeframe=month" target="_blank" rel="noreferrer" className={styles.iconLink}>
-                        <TipJarIcon size={20} weight="duotone" />
-                    </a>
+                    <HoldLink
+                        href="https://central.karat.io/interviewer/dashboard"
+                        className={styles.iconLink}
+                        color="#25BCC2"
+                    >
+                        <CaretUpIcon size={20} weight="bold" />
+                    </HoldLink>
+                    <HoldLink
+                        href="https://app.monarchmoney.com/accounts?chartType=performance&dateRange=6M&timeframe=month"
+                        className={styles.iconLink}
+                        color="#f97316"
+                    >
+                        <ButterflyIcon size={20} weight="duotone" />
+                    </HoldLink>
                 </div>
             )}
             {workMode && <div className={styles.rightLinks} />}
         </div>
     );
 }
-

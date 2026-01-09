@@ -129,7 +129,14 @@ export function HabitTracker() {
       return;
     }
 
+    // Flag to prevent stale callbacks from running after cleanup
+    let isActive = true;
+
     const calculateRowHeight = () => {
+      // Don't run if effect has been cleaned up
+      if (!isActive) {
+        return;
+      }
       if (!tableWrapperRef.current || !theadRef.current || filteredHabits.length === 0) {
         return;
       }
@@ -138,7 +145,6 @@ export function HabitTracker() {
       const theadHeight = theadRef.current.clientHeight;
       const availableHeight = wrapperHeight - theadHeight;
 
-      // Calculate height per row, with only a min 48px bound
       const calculatedHeight = Math.floor(availableHeight / filteredHabits.length);
       const boundedHeight = Math.max(48, calculatedHeight);
 
@@ -158,6 +164,7 @@ export function HabitTracker() {
     }
 
     return () => {
+      isActive = false; // Prevent any pending callbacks from running
       cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
     };
