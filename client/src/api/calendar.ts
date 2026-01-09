@@ -1,23 +1,9 @@
-/**
- * Calendar API
- *
- * REST wrappers + TanStack Query hooks for calendar endpoints.
- *
- * STRUCTURE:
- *   1. Raw fetch functions (get*, create*, update*, delete*)
- *   2. TanStack Query hooks (use* for queries, use*Mutation for mutations)
- *
- * TO ADD A NEW ENDPOINT:
- *   1. Add the fetch function (use fetchWithErrorReporting)
- *   2. Add a query key to queryKeys.ts if it's a GET
- *   3. Add the corresponding useQuery/useMutation hook
- */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CalendarEvent } from '../types';
 import { fetchWithErrorReporting } from './errorReporter';
 import { API_BASE_URL } from '../config';
 import { queryKeys } from './queryKeys';
+import { getLocalDateString } from '../utils/timezone';
 
 // ============ Types ============
 
@@ -87,7 +73,8 @@ export async function getCalendarEventsRange(
 // ============ TanStack Query Hooks ============
 
 function formatDateKey(date: Date): string {
-    return date.toISOString().split('T')[0];
+    // Use timezone-aware date string for cache keys
+    return getLocalDateString(date);
 }
 
 export function useCalendarEventsForDate(date: Date, enabled = true) {

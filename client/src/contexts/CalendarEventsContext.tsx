@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react';
 import type { CalendarEvent } from '../types';
 import { getCalendarEventsRange } from '../api/calendar';
+import { getLocalDateString } from '../utils/timezone';
 
 interface CalendarEventsCache {
     [dateString: string]: CalendarEvent[];
@@ -16,12 +17,14 @@ interface CalendarEventsContextValue {
 const CalendarEventsContext = createContext<CalendarEventsContextValue | null>(null);
 
 function formatDateKey(date: Date): string {
-    return date.toISOString().split('T')[0];
+    // Use timezone-aware date string for local dates
+    return getLocalDateString(date);
 }
 
 function groupEventsByDate(events: CalendarEvent[], startDate: Date, endDate: Date): CalendarEventsCache {
     const cache: CalendarEventsCache = {};
 
+    // Initialize all dates in range with empty arrays
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
@@ -33,19 +36,12 @@ function groupEventsByDate(events: CalendarEvent[], startDate: Date, endDate: Da
         current.setDate(current.getDate() + 1);
     }
 
+    // Group events by their LOCAL date (not UTC date)
     for (const event of events) {
-        const eventStart = new Date(event.start_time);
-
-        if (event.all_day) {
-            const dateKey = formatDateKey(eventStart);
-            if (cache[dateKey]) {
-                cache[dateKey].push(event);
-            }
-        } else {
-            const dateKey = formatDateKey(eventStart);
-            if (cache[dateKey]) {
-                cache[dateKey].push(event);
-            }
+        // Use getLocalDateString to get the date in the user's timezone
+        const dateKey = getLocalDateString(event.start_time);
+        if (cache[dateKey]) {
+            cache[dateKey].push(event);
         }
     }
 

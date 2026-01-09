@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { CalendarEvent } from '../types';
 import { getCalendarEvents, syncCalendarEvents } from '../api/calendar';
 import { useCalendarEventsContext } from '../contexts/CalendarEventsContext';
+import { getLocalDateString } from '../utils/timezone';
 
 interface UseCalendarEventsReturn {
     events: CalendarEvent[];
@@ -68,9 +69,11 @@ export function useCalendarEvents(date: Date, enabled: boolean): UseCalendarEven
     const { allDayEvents, timedEvents } = useMemo(() => {
         const allDay: CalendarEvent[] = [];
         const timed: CalendarEvent[] = [];
+        const targetDateStr = getLocalDateString(date);
 
         events
             .filter(event => event.summary && event.summary.trim() !== '')
+            .filter(event => getLocalDateString(event.start_time) === targetDateStr)
             .forEach(event => {
                 if (event.all_day) {
                     allDay.push(event);
@@ -84,7 +87,7 @@ export function useCalendarEvents(date: Date, enabled: boolean): UseCalendarEven
         );
 
         return { allDayEvents: allDay, timedEvents: timed };
-    }, [events]);
+    }, [events, date]);
 
     return {
         events,
