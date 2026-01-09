@@ -40,6 +40,8 @@ import {
     Ghost,
 } from '@phosphor-icons/react';
 import styles from './Todos.module.css';
+import { useHoldProgress } from '../../hooks/useHoldProgress';
+import { HOLD_DURATIONS } from '../../constants/holdDurations';
 
 interface TaskActionsOverlayProps {
     onMoveToTop: () => void;
@@ -48,6 +50,7 @@ interface TaskActionsOverlayProps {
     onGraveyard: () => void;
     onCopy: () => void;
 }
+
 
 export function TaskActionsOverlay({
     onMoveToTop,
@@ -58,28 +61,23 @@ export function TaskActionsOverlay({
 }: TaskActionsOverlayProps) {
     const [showOverlay, setShowOverlay] = useState(false);
     const [isHoveringOverlay, setIsHoveringOverlay] = useState(false);
-    const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [overlayPosition, setOverlayPosition] = useState<{ top: number; left?: number; right?: number }>({ top: 0, left: 0 });
 
+    const { holdProps, Ring } = useHoldProgress({
+        duration: HOLD_DURATIONS.TASK_OPTIONS,
+        trigger: 'hover',
+        label: 'Task options',
+        onComplete: () => setShowOverlay(true),
+    });
+
     const clearTimers = useCallback(() => {
-        if (hoverTimerRef.current) {
-            clearTimeout(hoverTimerRef.current);
-            hoverTimerRef.current = null;
-        }
         if (hideTimerRef.current) {
             clearTimeout(hideTimerRef.current);
             hideTimerRef.current = null;
         }
     }, []);
-
-    const handleMouseEnter = useCallback(() => {
-        clearTimers();
-        hoverTimerRef.current = setTimeout(() => {
-            setShowOverlay(true);
-        }, 200);
-    }, [clearTimers]);
 
     const handleMouseLeave = useCallback(() => {
         clearTimers();
@@ -137,12 +135,16 @@ export function TaskActionsOverlay({
         <div
             ref={wrapperRef}
             className={styles.taskActionsWrapper}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            {...holdProps}
+            onMouseLeave={(e) => {
+                handleMouseLeave();
+                holdProps.onMouseLeave();
+            }}
         >
             <button type="button" className={styles.taskActionsBtn}>
                 <DotsThreeVertical size={16} weight="bold" />
             </button>
+            <Ring />
             {showOverlay && createPortal(
                 <div
                     className={styles.taskActionsOverlay}

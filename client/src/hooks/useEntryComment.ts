@@ -16,10 +16,12 @@
  * {commentPanel && <CommentPanel {...commentPanel} />}
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { updateEntryComment, saveEntry } from '../api/habits';
 import { DateUtility, generateId } from '../utils';
 import type { Habit, HabitEntry } from '../types';
+import { useHoldProgress } from './useHoldProgress';
+import { HOLD_DURATIONS } from '../constants/holdDurations';
 
 const LONG_PRESS_MS = 400;
 const HOVER_TOOLTIP_MS = 500;
@@ -69,27 +71,51 @@ export function useEntryComment({
     // Tooltip state
     const [cellTooltip, setCellTooltip] = useState<CellTooltip | null>(null);
 
+    // Metadata for the active hold
+    const activeCellRef = useRef<{
+        habit: Habit;
+        date: Date;
+        entry: HabitEntry | undefined;
+    } | null>(null);
+
     // Timer refs
-    const longPressTimerRef = useRef<number | null>(null);
-    const longPressTriggeredRef = useRef(false);
     const cellHoverTimerRef = useRef<number | null>(null);
 
     // Clear all timers
     const clearTimers = useCallback(() => {
-        if (longPressTimerRef.current) {
-            window.clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-        }
         if (cellHoverTimerRef.current) {
             window.clearTimeout(cellHoverTimerRef.current);
             cellHoverTimerRef.current = null;
         }
     }, []);
 
+    const handleHoldComplete = useCallback(() => {
+        if (!activeCellRef.current) return;
+        const { habit, date, entry } = activeCellRef.current;
+        const dateStr = DateUtility.formatDate(date);
+        const entryId = entry?.entryId || generateId();
+
+        setPanelState({
+            habitId: habit.id,
+            habitName: habit.name,
+            dateStr,
+            entryId,
+            initialComment: entry?.comment || null
+        });
+    }, []);
+
+    const { holdProps, Ring, isHolding } = useHoldProgress({
+        duration: HOLD_DURATIONS.ENTRY_COMMENT,
+        startDelay: 100,
+        trigger: 'click',
+        label: 'Adding comment',
+        onComplete: handleHoldComplete,
+    });
+
     // Check if last interaction was a long-press (used to skip cycleState)
     const wasLongPress = useCallback(() => {
-        return longPressTriggeredRef.current;
-    }, []);
+        return isHolding;
+    }, [isHolding]);
 
     // Get handlers for a specific cell
     const getCellHandlers = useCallback((
@@ -97,35 +123,20 @@ export function useEntryComment({
         habit: Habit,
         entry: HabitEntry | undefined
     ): CellHandlers => {
-        const dateStr = DateUtility.formatDate(date);
-        const entryId = entry?.entryId || generateId();
-
         return {
-            onMouseDown: (_e: React.MouseEvent) => {
-                longPressTriggeredRef.current = false;
-
-                longPressTimerRef.current = window.setTimeout(() => {
-                    longPressTriggeredRef.current = true;
-                    setPanelState({
-                        habitId: habit.id,
-                        habitName: habit.name,
-                        dateStr,
-                        entryId,
-                        initialComment: entry?.comment || null
-                    });
-                }, LONG_PRESS_MS);
+            onMouseDown: (e: React.MouseEvent) => {
+                activeCellRef.current = { habit, date, entry };
+                holdProps.onMouseDown?.(e);
             },
 
             onMouseUp: () => {
-                if (longPressTimerRef.current) {
-                    window.clearTimeout(longPressTimerRef.current);
-                    longPressTimerRef.current = null;
-                }
+                holdProps.onMouseUp?.();
             },
 
             onMouseLeave: () => {
                 clearTimers();
                 setCellTooltip(null);
+                holdProps.onMouseLeave();
             },
 
             onMouseEnter: (e: React.MouseEvent) => {
@@ -142,7 +153,7 @@ export function useEntryComment({
                 }, HOVER_TOOLTIP_MS);
             }
         };
-    }, [clearTimers]);
+    }, [clearTimers, holdProps]);
 
     // Save comment handler
     const handleSaveComment = useCallback(async (comment: string) => {
@@ -215,6 +226,7 @@ export function useEntryComment({
         getCellHandlers,
         commentPanel,
         cellTooltip,
-        wasLongPress
+        wasLongPress,
+        Ring
     };
 }

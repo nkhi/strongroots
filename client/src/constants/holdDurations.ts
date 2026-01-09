@@ -13,7 +13,7 @@ export const HOLD_DURATIONS = {
     TASK_OPTIONS: 400,
 
     /** Habit time filter buttons */
-    TIME_FILTER: 250,
+    TIME_FILTER: 500,
 
     /** Navigation links (external URLs, daylight toggle) */
     NAV_LINK: 650,

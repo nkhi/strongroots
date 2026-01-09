@@ -85,7 +85,7 @@
   cursor: pointer;
   padding: 6px;
   transition: all 0.2s ease;
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;

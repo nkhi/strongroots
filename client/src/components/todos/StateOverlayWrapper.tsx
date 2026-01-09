@@ -21,6 +21,8 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Check, X } from '@phosphor-icons/react';
 import type { TaskState } from './taskUtils';
 import styles from './Todos.module.css';
+import { useHoldProgress } from '../../hooks/useHoldProgress';
+import { HOLD_DURATIONS } from '../../constants/holdDurations';
 
 interface StateOverlayProps {
     taskId: string;
@@ -30,6 +32,7 @@ interface StateOverlayProps {
     onToggle: () => void;
     children: React.ReactNode;
 }
+
 
 export function StateOverlayWrapper({
     taskId,
@@ -41,26 +44,21 @@ export function StateOverlayWrapper({
 }: StateOverlayProps) {
     const [showOverlay, setShowOverlay] = useState(false);
     const [isHoveringOverlay, setIsHoveringOverlay] = useState(false);
-    const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const { holdProps, Ring } = useHoldProgress({
+        duration: HOLD_DURATIONS.TASK_OPTIONS,
+        trigger: 'hover',
+        label: 'Task status',
+        onComplete: () => setShowOverlay(true),
+    });
+
     const clearTimers = useCallback(() => {
-        if (hoverTimerRef.current) {
-            clearTimeout(hoverTimerRef.current);
-            hoverTimerRef.current = null;
-        }
         if (hideTimerRef.current) {
             clearTimeout(hideTimerRef.current);
             hideTimerRef.current = null;
         }
     }, []);
-
-    const handleMouseEnter = useCallback(() => {
-        clearTimers();
-        hoverTimerRef.current = setTimeout(() => {
-            setShowOverlay(true);
-        }, 400);
-    }, [clearTimers]);
 
     const handleMouseLeave = useCallback(() => {
         clearTimers();
@@ -96,12 +94,16 @@ export function StateOverlayWrapper({
     return (
         <div
             className={styles.stateOverlayWrapper}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            {...holdProps}
+            onMouseLeave={(e) => {
+                handleMouseLeave();
+                holdProps.onMouseLeave();
+            }}
         >
             <div onClick={onToggle}>
                 {children}
             </div>
+            <Ring />
             {showOverlay && (
                 <div
                     className={styles.stateOverlay}

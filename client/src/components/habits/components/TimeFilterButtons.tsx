@@ -19,15 +19,17 @@ interface FilterButtonProps {
     isActive: boolean;
     color: string;
     title: string;
+    label: string;
     onClick: () => void;
     children: React.ReactNode;
 }
 
-function FilterButton({ isActive, color, title, onClick, children }: FilterButtonProps) {
+function FilterButton({ isActive, color, title, label, onClick, children }: FilterButtonProps) {
     const { holdProps, Ring } = useHoldProgress({
         duration: HOLD_DURATIONS.TIME_FILTER,
         trigger: 'hover',
         color,
+        label: isActive ? `Clear` : `Filter ${label}`,
         onComplete: onClick,
     });
 
@@ -73,6 +75,7 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                             isActive={isActive}
                             color={config.color}
                             title={config.label}
+                            label={config.label}
                             onClick={() => handleFilterClick(timeType)}
                         >
                             <IconComponent size={18} weight="duotone" />
@@ -85,6 +88,7 @@ export function TimeFilterButtons({ selectedTimeFilter, onFilterChange, chartDat
                     isActive={selectedTimeFilter === CRITICAL_FILTER}
                     color="#facc15"
                     title="Critical streaks (failed 3+ days)"
+                    label="Critical"
                     onClick={handleCriticalClick}
                 >
                     <WarningIcon size={18} weight="duotone" />

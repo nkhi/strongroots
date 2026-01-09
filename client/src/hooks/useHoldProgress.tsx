@@ -6,6 +6,8 @@ type TriggerMode = 'hover' | 'click';
 interface UseHoldProgressOptions {
     /** Duration in ms before action triggers */
     duration: number;
+    /** Optional delay in ms before the ring starts showing/filling */
+    startDelay?: number;
     /** Callback when hold completes */
     onComplete: () => void;
     /** 
@@ -18,6 +20,8 @@ interface UseHoldProgressOptions {
     enabled?: boolean;
     /** Ring color (defaults to blue) */
     color?: string;
+    /** Label text to show next to the ring (e.g., "Opening Nook") */
+    label?: string;
 }
 
 interface HoldProps {
@@ -57,18 +61,21 @@ function hasHoverCapability(): boolean {
 function HoldRingPortal({
     duration,
     positionRef,
-    size = 24,
-    strokeWidth = 3,
+    size = 16,
+    strokeWidth = 2.5,
     color = '#3B82F6',
+    label,
 }: {
     duration: number;
     positionRef: React.RefObject<{ x: number; y: number } | null>;
     size?: number;
     strokeWidth?: number;
     color?: string;
+    label?: string;
 }) {
     const circleRef = useRef<SVGCircleElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [showOnLeft, setShowOnLeft] = useState(false);
 
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
@@ -84,6 +91,18 @@ function HoldRingPortal({
         circle.style.transition = `stroke-dashoffset ${duration}ms linear`;
         circle.style.strokeDashoffset = '0';
     }, [duration, circumference]);
+
+    // Determine if we should show label on left (if too close to right edge)
+    useEffect(() => {
+        if (!label || !positionRef.current) return;
+
+        const pillWidth = 150; // Approximate pill width
+        const screenWidth = window.innerWidth;
+        const cursorX = positionRef.current.x;
+
+        // If cursor is in the right 1/3 of the screen, show label on left
+        setShowOnLeft(cursorX > screenWidth - pillWidth - 50);
+    }, [label, positionRef]);
 
     // Update position on animation frame
     useEffect(() => {
@@ -106,6 +125,49 @@ function HoldRingPortal({
 
     const initialPos = positionRef.current || { x: 0, y: 0 };
 
+    // If no label, render just the ring centered on cursor
+    if (!label) {
+        return createPortal(
+            <div
+                ref={containerRef}
+                style={{
+                    position: 'fixed',
+                    pointerEvents: 'none',
+                    zIndex: 99999,
+                    transform: 'translate(-50%, -50%)',
+                    left: initialPos.x,
+                    top: initialPos.y,
+                    width: size,
+                    height: size,
+                }}
+            >
+                <svg
+                    width={size}
+                    height={size}
+                    style={{ transform: 'rotate(-90deg)', display: 'block' }}
+                >
+                    <circle
+                        ref={circleRef}
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={strokeWidth}
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={circumference}
+                    />
+                </svg>
+            </div>,
+            document.body
+        );
+    }
+
+    // With label, render pill container
+    const pillPadding = 6;
+    const pillGap = 8;
+
     return createPortal(
         <div
             ref={containerRef}
@@ -113,17 +175,29 @@ function HoldRingPortal({
                 position: 'fixed',
                 pointerEvents: 'none',
                 zIndex: 99999,
-                transform: 'translate(-50%, -50%)',
+                transform: showOnLeft
+                    ? 'translate(-100%, -50%)'
+                    : 'translate(0%, -50%)',
                 left: initialPos.x,
                 top: initialPos.y,
-                width: size,
-                height: size,
+                display: 'flex',
+                flexDirection: showOnLeft ? 'row-reverse' : 'row',
+                alignItems: 'center',
+                gap: `${pillGap}px`,
+                background: 'rgba(0, 0, 0, 0.85)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '999px',
+                padding: `${pillPadding}px ${pillPadding + 4}px`,
+                paddingLeft: showOnLeft ? `${pillPadding + 8}px` : `${pillPadding}px`,
+                paddingRight: showOnLeft ? `${pillPadding}px` : `${pillPadding + 8}px`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
         >
             <svg
                 width={size}
                 height={size}
-                style={{ transform: 'rotate(-90deg)', display: 'block' }}
+                style={{ transform: 'rotate(-90deg)', display: 'block', flexShrink: 0 }}
             >
                 <circle
                     ref={circleRef}
@@ -138,6 +212,17 @@ function HoldRingPortal({
                     strokeDashoffset={circumference}
                 />
             </svg>
+            <span
+                style={{
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                }}
+            >
+                {label}
+            </span>
         </div>,
         document.body
     );
@@ -145,10 +230,12 @@ function HoldRingPortal({
 
 export function useHoldProgress({
     duration,
+    startDelay = 0,
     onComplete,
     trigger = 'click',
     enabled = true,
     color,
+    label,
 }: UseHoldProgressOptions): UseHoldProgressReturn {
     const [isHolding, setIsHolding] = useState(false);
 
@@ -156,10 +243,11 @@ export function useHoldProgress({
     const positionRef = useRef<{ x: number; y: number } | null>(null);
 
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const previousCursorRef = useRef<string>('');
     const isActiveRef = useRef(false);
     const onCompleteRef = useRef(onComplete);
-    const cooldownRef = useRef(false); // Prevent immediate re-trigger after completion
+    const cooldownRef = useRef(false);
 
     const effectiveTrigger = useMemo(() => {
         if (trigger === 'hover' && !hasHoverCapability()) {
@@ -190,32 +278,45 @@ export function useHoldProgress({
 
         isActiveRef.current = true;
         positionRef.current = { x, y };
-        setIsHolding(true);
-        hideCursor();
 
-        timerRef.current = setTimeout(() => {
-            if (isActiveRef.current) {
-                timerRef.current = null;
-                isActiveRef.current = false;
-                positionRef.current = null;
-                setIsHolding(false);
-                restoreCursor();
+        const beginProgress = () => {
+            if (!isActiveRef.current) return;
+            setIsHolding(true);
+            hideCursor();
 
-                // Set cooldown to prevent immediate re-trigger
-                cooldownRef.current = true;
-                setTimeout(() => {
-                    cooldownRef.current = false;
-                }, 200); // 200ms cooldown
+            timerRef.current = setTimeout(() => {
+                if (isActiveRef.current) {
+                    timerRef.current = null;
+                    isActiveRef.current = false;
+                    positionRef.current = null;
+                    setIsHolding(false);
+                    restoreCursor();
 
-                onCompleteRef.current();
-            }
-        }, duration);
-    }, [enabled, duration, hideCursor, restoreCursor]);
+                    cooldownRef.current = true;
+                    setTimeout(() => {
+                        cooldownRef.current = false;
+                    }, 200);
+
+                    onCompleteRef.current();
+                }
+            }, duration);
+        };
+
+        if (startDelay > 0) {
+            delayTimerRef.current = setTimeout(beginProgress, startDelay);
+        } else {
+            beginProgress();
+        }
+    }, [enabled, duration, startDelay, hideCursor, restoreCursor]);
 
     const cancelHold = useCallback(() => {
         if (timerRef.current) {
             clearTimeout(timerRef.current);
             timerRef.current = null;
+        }
+        if (delayTimerRef.current) {
+            clearTimeout(delayTimerRef.current);
+            delayTimerRef.current = null;
         }
         isActiveRef.current = false;
         positionRef.current = null;
@@ -233,6 +334,9 @@ export function useHoldProgress({
         return () => {
             if (timerRef.current) {
                 clearTimeout(timerRef.current);
+            }
+            if (delayTimerRef.current) {
+                clearTimeout(delayTimerRef.current);
             }
             if (document.body.style.cursor === 'none') {
                 document.body.style.cursor = previousCursorRef.current;
@@ -339,8 +443,8 @@ export function useHoldProgress({
     // Stable Ring component that uses ref for position
     const Ring = useCallback(() => {
         if (!isHolding) return null;
-        return <HoldRingPortal duration={duration} positionRef={positionRef} color={color} />;
-    }, [isHolding, duration, color]);
+        return <HoldRingPortal duration={duration} positionRef={positionRef} color={color} label={label} />;
+    }, [isHolding, duration, color, label]);
 
     return {
         holdProps,

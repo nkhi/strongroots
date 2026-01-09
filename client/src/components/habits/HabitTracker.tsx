@@ -87,7 +87,7 @@ export function HabitTracker() {
     handleDeadlineMouseLeave
   } = useHabitInteractions(setHabits);
 
-  const { getCellHandlers, commentPanel, cellTooltip, wasLongPress } = useEntryComment({
+  const { getCellHandlers, commentPanel, cellTooltip, wasLongPress, Ring } = useEntryComment({
     entries,
     habits,
     onEntriesChange: handleEntriesChange
@@ -243,6 +243,7 @@ export function HabitTracker() {
 
 
       {commentPanel && <CommentPanel {...commentPanel} />}
+      <Ring />
 
 
       {reorderingHabit && reorderPosition && (

@@ -11,6 +11,7 @@ export function NookButton() {
     const { holdProps, Ring } = useHoldProgress({
         duration: HOLD_DURATIONS.NOOK_PANEL,
         trigger: 'hover',
+        label: 'Music options',
         onComplete: nook.openPanel,
     });
 

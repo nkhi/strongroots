@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, SunDim, VideoCameraIcon } from '@phosphor-icons/react';
+import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, SunDim, VideoCameraIcon, CalendarIcon } from '@phosphor-icons/react';
 import { ServerStatus } from './ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../daylight/DaylightContext';
@@ -22,15 +22,17 @@ interface NavigationProps {
 interface HoldLinkProps {
     href: string;
     color: string;
+    label: string;
     children: React.ReactNode;
     className?: string;
 }
 
-function HoldLink({ href, color, children, className }: HoldLinkProps) {
+function HoldLink({ href, color, label, children, className }: HoldLinkProps) {
     const { holdProps, Ring } = useHoldProgress({
         duration: HOLD_DURATIONS.NAV_LINK,
         trigger: 'hover',
         color,
+        label,
         onComplete: () => window.open(href, '_blank'),
     });
 
@@ -48,15 +50,17 @@ function HoldLink({ href, color, children, className }: HoldLinkProps) {
 interface HoldButtonProps {
     onClick: () => void;
     color: string;
+    label: string;
     children: React.ReactNode;
     className?: string;
 }
 
-function HoldButton({ onClick, color, children, className }: HoldButtonProps) {
+function HoldButton({ onClick, color, label, children, className }: HoldButtonProps) {
     const { holdProps, Ring } = useHoldProgress({
         duration: HOLD_DURATIONS.NAV_LINK,
         trigger: 'hover',
         color,
+        label,
         onComplete: onClick,
     });
 
@@ -99,6 +103,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                     onClick={handleDaylightClick}
                     className={styles.tabBtn}
                     color="#f59e0b"
+                    label="Opening Daylight"
                 >
                     <SunDim size={20} weight="duotone" />
                 </HoldButton>
@@ -114,14 +119,14 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                         className={`${styles.tabBtn} ${activeTab === 'habits' ? styles.active : ''}`}
                         onClick={() => onTabChange('habits')}
                     >
-                        <CalendarCheck size={20} weight={activeTab === 'habits' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                        <CalendarCheck size={24} weight={activeTab === 'habits' ? 'duotone' : 'regular'} className={styles.navIcon} />
                     </button>
                 )}
                 <button
                     className={`${styles.tabBtn} ${activeTab === 'todos' ? styles.active : ''}`}
                     onClick={() => onTabChange('todos')}
                 >
-                    <ListChecks size={20} weight={activeTab === 'todos' ? 'bold' : 'regular'} className={styles.navIcon} />
+                    <ListChecks size={24} weight={activeTab === 'todos' ? 'bold' : 'regular'} className={styles.navIcon} />
                 </button>
                 {!workMode && (
                     <>
@@ -130,25 +135,25 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                             className={`${styles.tabBtn} ${activeTab === 'journal' ? styles.active : ''}`}
                             onClick={() => onTabChange('journal')}
                         >
-                            <HeartbeatIcon size={20} weight={activeTab === 'journal' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                            <HeartbeatIcon size={24} weight={activeTab === 'journal' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
                         <button
                             className={`${styles.tabBtn} ${activeTab === 'memos' ? styles.active : ''}`}
                             onClick={() => onTabChange('memos')}
                         >
-                            <LightbulbIcon size={20} weight={activeTab === 'memos' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                            <LightbulbIcon size={24} weight={activeTab === 'memos' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
                         <button
                             className={`${styles.tabBtn} ${activeTab === 'lists' ? styles.active : ''}`}
                             onClick={() => onTabChange('lists')}
                         >
-                            <ListDashes size={20} weight={activeTab === 'lists' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                            <ListDashes size={24} weight={activeTab === 'lists' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
                         <button
                             className={`${styles.tabBtn} ${activeTab === 'next' ? styles.active : ''}`}
                             onClick={() => onTabChange('next')}
                         >
-                            <TreeIcon size={20} weight={activeTab === 'next' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                            <TreeIcon size={24} weight={activeTab === 'next' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
                         <MemoryButton
                             isPanelOpen={isMemoryPanelOpen}
@@ -159,7 +164,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                             className={`${styles.tabBtn} ${activeTab === 'vlogs' ? styles.active : ''}`}
                             onClick={() => window.open(capUrl, '_blank')}
                         >
-                            <VideoCameraIcon size={20} weight={activeTab === 'vlogs' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                            <VideoCameraIcon size={24} weight={activeTab === 'vlogs' ? 'duotone' : 'regular'} className={styles.navIcon} />
                         </button>
                     </>
                 )}
@@ -171,6 +176,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                         href="https://central.karat.io/interviewer/dashboard"
                         className={styles.iconLink}
                         color="#25BCC2"
+                        label="Opening Karat"
                     >
                         <CaretUpIcon size={20} weight="bold" />
                     </HoldLink>
@@ -178,8 +184,17 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                         href="https://app.monarchmoney.com/accounts?chartType=performance&dateRange=6M&timeframe=month"
                         className={styles.iconLink}
                         color="#f97316"
+                        label="Opening Monarch"
                     >
                         <ButterflyIcon size={20} weight="duotone" />
+                    </HoldLink>
+                    <HoldLink
+                        href="https://calendar.google.com/calendar/u/0/r#main_7"
+                        className={styles.iconLink}
+                        color="#f97316"
+                        label="Opening Calendar"
+                    >
+                        <CalendarIcon size={20} weight="duotone" />
                     </HoldLink>
                 </div>
             )}
