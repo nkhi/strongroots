@@ -152,6 +152,24 @@ export async function syncCalendarEvents(
 }
 
 /**
+ * Checks connection to Google Calendar by listing a single event.
+ */
+export async function checkCalendarConnection(): Promise<boolean> {
+    try {
+        if (!calendarId) return false;
+        await calendar.events.list({
+            calendarId,
+            maxResults: 1,
+            singleEvents: true,
+        });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+
+/**
  * Retrieves events from the local database for a given date range.
  */
 export async function getCalendarEvents(startTime: Date, endTime: Date): Promise<DbCalendarEvent[]> {

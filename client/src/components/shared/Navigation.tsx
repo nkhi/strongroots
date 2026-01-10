@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, SunDim, VideoCameraIcon, CalendarIcon } from '@phosphor-icons/react';
+import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, Carrot, SunDim, VideoCameraIcon, CalendarIcon } from '@phosphor-icons/react';
 import { ServerStatus } from './ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../daylight/DaylightContext';
@@ -7,7 +7,10 @@ import { NookButton } from '../nook/NookButton';
 import { MemoryButton } from '../memories/MemoryButton';
 import { useNavHotkeys } from '../../hooks/useNavHotkeys';
 import { useHoldProgress } from '../../hooks/useHoldProgress';
+
 import { HOLD_DURATIONS } from '../../constants/holdDurations';
+import { useCarrotInterviews } from '../../hooks/useCarrotInterviews';
+import { useCalendarEventsContext } from '../../contexts/CalendarEventsContext';
 
 export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs' | 'memories';
 
@@ -78,6 +81,19 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
     const { themeColors } = useDaylight();
     useNavHotkeys({ onTabChange, workMode });
     const [isMemoryPanelOpen, setIsMemoryPanelOpen] = React.useState(false);
+    const { remainingCount } = useCarrotInterviews();
+    const calendarContext = useCalendarEventsContext();
+
+    // Prefetch calendar events on mount (±7 days)
+    React.useEffect(() => {
+        if (!calendarContext) return;
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - 7);
+        const end = new Date(today);
+        end.setDate(today.getDate() + 7);
+        calendarContext.prefetchDateRange(start, end);
+    }, [calendarContext]);
 
     const capUrl = import.meta.env.VITE_CAP_URL;
 
@@ -178,7 +194,13 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                         color="#25BCC2"
                         label="Opening Karat"
                     >
-                        <CaretUpIcon size={20} weight="bold" />
+
+                        <div style={{ position: 'relative', display: 'flex' }}>
+                            <Carrot size={20} weight="bold" />
+                            {remainingCount > 0 && (
+                                <span className={styles.caretBadge}>{remainingCount}</span>
+                            )}
+                        </div>
                     </HoldLink>
                     <HoldLink
                         href="https://app.monarchmoney.com/accounts?chartType=performance&dateRange=6M&timeframe=month"
@@ -191,7 +213,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                     <HoldLink
                         href="https://calendar.google.com/calendar/u/0/r#main_7"
                         className={styles.iconLink}
-                        color="#f97316"
+                        color="#3B82F6"
                         label="Opening Calendar"
                     >
                         <CalendarIcon size={20} weight="duotone" />

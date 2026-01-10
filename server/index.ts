@@ -11,6 +11,7 @@ import nextRoutes from './routes/next.ts';
 import listsRoutes from './routes/lists.ts';
 import calendarRoutes from './routes/calendar.ts';
 import memoriesRoutes from './routes/memories.ts';
+import { checkCalendarConnection, syncCalendarEvents } from './services/calendarService.ts';
 
 console.log('[SERVER] 🏁 Starting server process...');
 
@@ -92,6 +93,15 @@ app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log(`[SERVER] 🚀 API running on http://0.0.0.0:${PORT}`);
   console.log(`[SERVER] 🐘 Connected to CockroachDB`);
+
+  // Check Calendar Connection
+  checkCalendarConnection().then(async isConnected => {
+    console.log(`[SERVER] 📅 ${isConnected ? 'Connected to Google Calendar' : 'Failed to connect to Google Calendar'}`);
+    if (isConnected) {
+      await syncCalendarEvents();
+    }
+  });
+
   console.log(`[SERVER] 📝 Verbose logging enabled`);
   console.log('='.repeat(60) + '\n');
 });
