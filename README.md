@@ -19,7 +19,7 @@ This app exists to make it easy to iterate on *how* I organize myself. Ideally, 
 | 📔 **Journal** | An open journal, plus daily questions to keep records of the day. |
 | 📝 **Lists** | Groceries, furniture ideas, movie watchlists, and any kinds of loose plans. |
 | 🌱 **Grow** | Google Keep-style tiled cards for larger goals to keep in mind. |
-| 🎯 **Memories** | **Quick capture for daily highlights.** <br><br>Dropbox for recording good memories throughout the year for a year end reflection. |
+| 🎯 **Memories** | Dropbox for recording good memories throughout the year for a year-end reflection. |
 | 🎞 **Vlogs** | [Cap](https://cap.so/) deployment for weekly recap vlogs and one-off recordings. Runs on a local Docker image. Video is stored on a local [MinIO](https://min.io/) instance saving media on my central server, enabling private and self-owned media storage and transmission. |
 
 <table>
