@@ -13,6 +13,7 @@ This app exists to make it easy to iterate on *how* I organize myself. Ideally, 
 **Start** is built around a few core principles:
 
 1. **Single source of truth** - One app for all your personal organization
+1. **Private** - Self-hosted behind a homelab VPN network, no public internet
 2. **Minimal friction** - Quick to open, quick to use
 3. **Visual clarity** - Clean design with meaningful colors and icons
 4. **Daily focus** - Emphasizes today while tracking long-term progress
