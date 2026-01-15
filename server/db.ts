@@ -3,9 +3,9 @@ import 'dotenv/config';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false // Required for CockroachDB Serverless
-  }
+  ssl: process.env.DATABASE_SSL === 'true'
+    ? { rejectUnauthorized: false }
+    : false
 });
 
 // The pool will emit an error on behalf of any idle clients
@@ -17,19 +17,19 @@ pool.on('error', (err: Error) => {
 });
 
 // Test the connection
-console.log('[DB] ⏳ Attempting to connect to CockroachDB...');
+console.log('[DB] ⏳ Attempting to connect to PostgreSQL...');
 pool.connect((err: Error | undefined, client: PoolClient | undefined, release: () => void) => {
   if (err) {
     console.error('[DB] ❌ Error acquiring client', err.stack);
-    console.error('[DB] 💡 Check your .env file and internet connection.');
+    console.error('[DB] 💡 Check your .env file and database connection.');
   } else {
-    console.log('[DB] ✅ Connected to CockroachDB successfully');
+    console.log('[DB] ✅ Connected to PostgreSQL successfully');
     release();
   }
 });
 
 export async function query<T extends QueryResultRow = QueryResultRow>(
-  text: string, 
+  text: string,
   params?: unknown[]
 ): Promise<QueryResult<T>> {
   return pool.query<T>(text, params);

@@ -1,7 +1,6 @@
 /**
- * Database Row Types - Server only
- * 
- * These match the CockroachDB schema (snake_case).
+ * Database row types for the Start app.
+ * These match the PostgreSQL schema (snake_case).
  * For API types, use shared/types.ts
  */
 

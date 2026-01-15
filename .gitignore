@@ -7,5 +7,16 @@ data/
 data copy/
 server.log
 junk
+
+# Environment files (contain secrets)
 .env
+.env.local
+server/.env
+client/.env.local
+
+# Credentials
 /server/google-calendar-key.json
+
+# Docker data (managed by Docker volumes, but just in case)
+headscale/*.key
+*.sqlite

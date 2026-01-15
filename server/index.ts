@@ -92,7 +92,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log(`[SERVER] 🚀 API running on http://0.0.0.0:${PORT}`);
-  console.log(`[SERVER] 🐘 Connected to CockroachDB`);
+  console.log(`[SERVER] 🐘 Connected to PostgreSQL`);
 
   // Check Calendar Connection
   checkCalendarConnection().then(async isConnected => {

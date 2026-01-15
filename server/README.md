@@ -2,7 +2,7 @@
 
 ← [Back to main README](../README.md)
 
-Express + TypeScript API server running on Bun with CockroachDB backend.
+Express + TypeScript API server running on Bun with PostgreSQL backend.
 
 ## Quick Start
 
@@ -18,11 +18,20 @@ Create a `.env` file:
 
 ```env
 PORT=3000
-DATABASE_URL=<your-cockroachdb-connection-string>
 
+# Database connection (PostgreSQL via Docker)
+DATABASE_URL=postgres://start:yourpassword@localhost:5432/start
+DATABASE_SSL=false
+
+# Google Calendar (optional)
 GOOGLE_APPLICATION_CREDENTIALS=./google-calendar-key.json
 GOOGLE_CALENDAR_ID=you-can-find-this-in-the-calendar-settings-usually-it-is-your-email-address
 ```
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_SSL` | Set to `false` for local PostgreSQL |
 
 ### Google Calendar Setup (Sort of Optional)
 
@@ -88,12 +97,12 @@ server/
 
 ## Database Schema
 
-All data is stored in **CockroachDB**. The following tables are used:
+All data is stored in **PostgreSQL** (self-hosted via Docker). The following tables are used:
 
 | Table | Purpose |
 |-------|---------|
-| `habits` | Habit definitions (name, order, default_time, active, comment) |
-| `entries` | Habit entries by date (habit_id, date, state, timestamp) |
+| `habits` | Habit definitions (name, order, default_time, active, comment, deadline_time) |
+| `entries` | Habit entries by date (habit_id, date, state, timestamp, comment) |
 | `tasks` | Todo items (text, date, category, state, order) |
 | `questions` | Journal prompts (text, order, active, date for ad-hoc) |
 | `diary_entries` | Journal answers (date, question_id, answer) |
@@ -102,8 +111,9 @@ All data is stored in **CockroachDB**. The following tables are used:
 | `next_items` | Ideas/notes cards (title, content, color, size, started_at, deleted_at) |
 | `vlogs` | Weekly video reflections (week_start_date, video_url, embed_html) |
 | `calendar_events` | Cached Google Calendar events (summary, start_time, end_time, all_day) |
+| `memories` | Memory entries (text, date) |
 
-> **Note:** CockroachDB's free tier is very generous and should be more than enough for personal use. They do require a CC but with price limiting, and $15 of free credits every month, this works very well for this project.
+> **Recommended:** Use self-hosted PostgreSQL via Docker for full privacy and no cloud dependencies.
 
 ### Database Setup
 
