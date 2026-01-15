@@ -89,7 +89,10 @@ By the end of this setup, you'll have:
 You'll need:
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) - for running PostgreSQL
 
-### Installation
+### Installation Steps
+
+<details>
+<summary><strong>Click to expand</strong></summary>
 
 1. **Clone the repository**
    ```bash
@@ -140,15 +143,18 @@ You'll need:
    ```
 
    This will:
+   - Start Docker Desktop automatically (macOS only)
    - Start the PostgreSQL Docker container
    - Wait for PostgreSQL to be healthy
    - Start the API server on `http://localhost:3000`
    - Start the client on `http://localhost:5173`
    - Open your browser automatically
 
-   > **Note:** Requires Docker Desktop to be running.
+   > **Note:** Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) to be installed.
 
    **That's it!** If you're just running this locally on your own machine, you're done. 🎉
+
+</details>
 
 <!-- 7. **Want to access from other devices?** (Optional)
 
@@ -216,15 +222,12 @@ All services on the home server are accessible via the VPN. Headscale handles au
 
 ## Tech Stack
 
-- **Web Client**: React, TypeScript, Vite. CSS Modules. Phosphor Icons.
-- **API Server**: Express, TypeScript (running on Bun)
-- **Runtime/Package Manager**: Bun
-- **Calendar**: Google Calendar API
-- **Video (old)**: Loom SDK (old) + cloud storage.
-- **Video (new)**: Cap front-end + local MinIO back-end.
-- **Database**: PostgreSQL (self-hosted via Docker)
-- **Networking**: Headscale (self-hosted Tailscale) for secure multi-device access
-- **Styling**: CSS Modules with Phosphor Icons
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React, TypeScript, Vite, CSS Modules, [Phosphor Icons](https://phosphoricons.com/) |
+| **Backend** | Express, TypeScript, [Bun](https://bun.sh/) |
+| **Database** | PostgreSQL (Docker) |
+| **Integrations** | Google Calendar API, [Cap](https://cap.so/) + [MinIO](https://min.io/) |
 
 ## Private Data
 
