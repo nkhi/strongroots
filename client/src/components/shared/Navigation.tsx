@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, Carrot, SunDim, VideoCameraIcon, CalendarIcon } from '@phosphor-icons/react';
+import { CalendarCheck, ListChecks, ButterflyIcon, LightbulbIcon, ListDashes, TreeIcon, HeartbeatIcon, CaretUpIcon, Carrot, SunDim, VideoCameraIcon, CalendarIcon, ImagesSquareIcon } from '@phosphor-icons/react';
 import { ServerStatus } from './ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../daylight/DaylightContext';
@@ -12,7 +12,7 @@ import { HOLD_DURATIONS } from '../../constants/holdDurations';
 import { useCarrotInterviews } from '../../hooks/useCarrotInterviews';
 import { useCalendarEventsContext } from '../../contexts/CalendarEventsContext';
 
-export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs' | 'memories';
+export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs' | 'memories' | 'immich';
 
 interface NavigationProps {
     activeTab: TabType;
@@ -81,7 +81,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
     const { themeColors } = useDaylight();
     useNavHotkeys({ onTabChange, workMode });
     const [isMemoryPanelOpen, setIsMemoryPanelOpen] = React.useState(false);
-    const { remainingCount } = useCarrotInterviews();
+    // const { remainingCount } = useCarrotInterviews();
     const calendarContext = useCalendarEventsContext();
 
     // Prefetch calendar events on mount (±7 days)
@@ -96,6 +96,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
     }, [calendarContext]);
 
     const capUrl = import.meta.env.VITE_CAP_URL;
+    const immichUrl = import.meta.env.VITE_IMMICH_URL;
 
     const navStyle = (activeTab === 'daylight' && themeColors) ? {
         '--daylight-text-color': themeColors.text
@@ -176,6 +177,12 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                             onToggle={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
                             className={`${styles.tabBtn} ${isMemoryPanelOpen ? styles.active : ''}`}
                         />
+                        <button
+                            className={`${styles.tabBtn} ${activeTab === 'vlogs' ? styles.active : ''}`}
+                            onClick={() => onTabChange('immich')}
+                        >
+                            <ImagesSquareIcon size={24} weight={activeTab === 'vlogs' ? 'duotone' : 'regular'} className={styles.navIcon} />
+                        </button>
                         <button
                             className={`${styles.tabBtn} ${activeTab === 'vlogs' ? styles.active : ''}`}
                             onClick={() => window.open(capUrl, '_blank')}

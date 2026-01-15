@@ -15,6 +15,7 @@ import { CalendarEventsProvider } from './contexts/CalendarEventsContext';
 import { ApiErrorProvider, useApiError } from './components/shared/ApiErrorContext';
 import { ApiErrorToast } from './components/shared/ApiErrorToast';
 import { setGlobalErrorReporter, clearGlobalErrorReporter } from './api/errorReporter';
+import { Immich } from './components/immich/Immich';
 
 // Detect work mode from URL query params (?mode=work)
 const urlParams = new URLSearchParams(window.location.search);
@@ -61,6 +62,7 @@ function AppContent() {
           {!WORK_MODE && activeTab === 'journal' && <Diary />}
           {!WORK_MODE && activeTab === 'next' && <Next />}
           {!WORK_MODE && activeTab === 'lists' && <Lists />}
+          {!WORK_MODE && activeTab === 'immich' && <Immich />}
         </main>
       </div>
       <ApiErrorToast />

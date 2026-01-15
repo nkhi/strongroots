@@ -1,0 +1,34 @@
+.immichContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.immichLoadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #110C09;
+  z-index: 10;
+  pointer-events: none;
+  animation: fadeOut 0.5s ease 1s forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.immichFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
