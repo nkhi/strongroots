@@ -11,5 +11,5 @@ export const MEMOS_URL = import.meta.env.VITE_MEMOS_URL
     || `http://${window.location.hostname}:5230`;
 
 // Immich URL - configurable via env for multi-device access  
-export const IMMICH_URL = import.meta.env.IMMICH_URL
-    || `http://${window.location.hostname}:5230`;
+export const IMMICH_URL = import.meta.env.VITE_IMMICH_URL
+    || `http://${window.location.hostname}:2283`;
