@@ -188,7 +188,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
 
             {!workMode && (
                 <div className={styles.rightLinks}>
-                    <HoldLink
+                    {/* <HoldLink
                         href="https://central.karat.io/interviewer/dashboard"
                         className={styles.iconLink}
                         color="#25BCC2"
@@ -201,7 +201,7 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
                                 <span className={styles.caretBadge}>{remainingCount}</span>
                             )}
                         </div>
-                    </HoldLink>
+                    </HoldLink> */}
                     <HoldLink
                         href="https://app.monarchmoney.com/accounts?chartType=performance&dateRange=6M&timeframe=month"
                         className={styles.iconLink}
