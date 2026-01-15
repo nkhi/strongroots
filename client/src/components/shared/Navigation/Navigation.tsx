@@ -1,0 +1,132 @@
+import React from 'react';
+import { SunDim, VideoCameraIcon, ImageIcon } from '@phosphor-icons/react';
+import { ServerStatus } from '../ServerStatus';
+import styles from './Navigation.module.css';
+import { useDaylight } from '../../daylight/DaylightContext';
+import { NookButton } from '../../nook/NookButton';
+import { MemoryButton } from '../../memories/MemoryButton';
+import { useNavHotkeys } from '../../../hooks/useNavHotkeys';
+import { useCalendarEventsContext } from '../../../contexts/CalendarEventsContext';
+
+import { NAV_TABS, EXTERNAL_LINKS } from './constants';
+import { HoldButton } from './HoldButton';
+import { HoldLink } from './HoldLink';
+import type { TabType } from './types';
+
+interface NavigationProps {
+    activeTab: TabType;
+    lastTab?: TabType;
+    onTabChange: (tab: TabType) => void;
+    workMode?: boolean;
+}
+
+export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }: NavigationProps) {
+    const { themeColors } = useDaylight();
+    useNavHotkeys({ onTabChange, workMode });
+    const [isMemoryPanelOpen, setIsMemoryPanelOpen] = React.useState(false);
+    const calendarContext = useCalendarEventsContext();
+
+    // Prefetch calendar events on mount (±7 days)
+    React.useEffect(() => {
+        if (!calendarContext) return;
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - 7);
+        const end = new Date(today);
+        end.setDate(today.getDate() + 7);
+        calendarContext.prefetchDateRange(start, end);
+    }, [calendarContext]);
+
+    const capUrl = import.meta.env.VITE_CAP_URL;
+
+    const navStyle = (activeTab === 'daylight' && themeColors) ? {
+        '--daylight-text-color': themeColors.text
+    } as React.CSSProperties : {};
+
+    const handleDaylightClick = () => {
+        if (activeTab === 'daylight' && lastTab) {
+            onTabChange(lastTab);
+        } else {
+            onTabChange('daylight');
+        }
+    };
+
+    return (
+        <div
+            className={`${styles.navContainer} ${activeTab === 'daylight' ? styles.immersive : ''}`}
+            style={navStyle}
+        >
+            <div className={styles.leftSection}>
+                <HoldButton
+                    onClick={handleDaylightClick}
+                    className={styles.tabBtn}
+                    color="#f59e0b"
+                    label="Opening Daylight"
+                >
+                    <SunDim size={20} weight="duotone" />
+                </HoldButton>
+
+                <NookButton />
+
+                <ServerStatus />
+            </div>
+
+            <div className={styles.tabSwitcher}>
+                {NAV_TABS.filter(tab => !workMode || tab.showInWorkMode).map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id || (tab.id === 'immich' && activeTab === 'vlogs');
+
+                    const handleClick = () => {
+                        if (tab.onClick) {
+                            tab.onClick({ onTabChange, capUrl });
+                        } else {
+                            onTabChange(tab.id as TabType);
+                        }
+                    };
+
+                    return (
+                        <button
+                            key={tab.id}
+                            className={`${styles.tabBtn} ${isActive ? styles.active : ''}`}
+                            onClick={handleClick}
+                        >
+                            <Icon
+                                size={24}
+                                weight={isActive ? (tab.useDuotone ? 'duotone' : 'bold') : 'regular'}
+                                className={styles.navIcon}
+                            />
+                        </button>
+                    );
+                })}
+
+                {!workMode && (
+                    <MemoryButton
+                        isPanelOpen={isMemoryPanelOpen}
+                        onToggle={() => setIsMemoryPanelOpen(!isMemoryPanelOpen)}
+                        className={`${styles.tabBtn} ${isMemoryPanelOpen ? styles.active : ''}`}
+                    />
+                )}
+            </div>
+
+            {!workMode && (
+                <div className={styles.rightLinks}>
+                    {EXTERNAL_LINKS.map((link) => {
+                        const Icon = link.icon;
+                        return (
+                            <HoldLink
+                                key={link.id}
+                                href={link.href}
+                                className={styles.iconLink}
+                                color={link.color}
+                                label={link.label}
+                            >
+                                <Icon size={20} weight="duotone" />
+                            </HoldLink>
+                        );
+                    })}
+                </div>
+            )}
+            {workMode && <div className={styles.rightLinks} />}
+        </div>
+    );
+}

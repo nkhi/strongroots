@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useCallback } from 'react';
+import { NAV_TABS } from '../components/shared/Navigation/constants';
 import type { TabType } from '../components/shared/Navigation';
 
 export interface UseNavHotkeysOptions {
@@ -36,7 +37,8 @@ const TAB_HOTKEYS: Record<string, TabType> = {
 };
 
 // Tabs available in work mode
-const WORK_MODE_TABS: TabType[] = ['todos'];
+const WORK_MODE_TABS = NAV_TABS.filter(tab => tab.showInWorkMode).map(tab => tab.id);
+
 
 export function useNavHotkeys({ onTabChange, workMode = false }: UseNavHotkeysOptions): void {
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
