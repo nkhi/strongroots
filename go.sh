@@ -84,9 +84,9 @@ start_headscale() {
   echo -e "${GREEN}[DOCKER]${NC} Headscale running on port 8080"
 }
 
-start_postgres() {
-  echo -e "${GREEN}[DOCKER]${NC} Starting Postgres..."
-  docker compose up -d postgres
+start_containers() {
+  echo -e "${GREEN}[DOCKER]${NC} Starting Postgres and Memos..."
+  docker compose up -d postgres memos
 
   # Wait for Postgres to be healthy
   echo -e "${YELLOW}[DOCKER]${NC} Waiting for Postgres to be ready..."
@@ -103,6 +103,7 @@ start_postgres() {
   fi
 
   echo -e "${GREEN}[DOCKER]${NC} Postgres is ready!"
+  echo -e "${GREEN}[DOCKER]${NC} Memos running on port 5230"
 }
 
 start_backend() {
@@ -141,7 +142,7 @@ trap cleanup SIGINT SIGTERM
 
 start_docker
 [ "$WITH_HEADSCALE" = true ] && start_headscale
-start_postgres
+start_containers
 start_backend
 start_frontend
 
