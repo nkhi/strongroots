@@ -36,7 +36,10 @@ export const NAV_TABS: NavItem[] = [
         id: 'memos',
         icon: LightbulbIcon,
         showInWorkMode: false,
-        useDuotone: true
+        useDuotone: true,
+        theme: {
+            background: '#151618'
+        }
     },
     {
         id: 'lists',
@@ -55,7 +58,10 @@ export const NAV_TABS: NavItem[] = [
         icon: ImageIcon,
         showInWorkMode: false,
         useDuotone: true,
-        isActive: (activeTab) => activeTab === 'immich' || activeTab === 'vlogs'
+        isActive: (activeTab) => activeTab === 'immich' || activeTab === 'vlogs',
+        theme: {
+            background: '#000000'
+        }
     },
     {
         id: 'cap',
@@ -65,6 +71,9 @@ export const NAV_TABS: NavItem[] = [
         onClick: ({ onTabChange }) => {
             fetch(`${API_BASE_URL}/api/services/cap/start`, { method: 'POST' }).catch(console.error);
             onTabChange('cap');
+        },
+        theme: {
+            background: '#111111'
         }
     }
 ];

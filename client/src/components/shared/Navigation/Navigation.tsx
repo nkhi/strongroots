@@ -1,5 +1,5 @@
 import React from 'react';
-import { SunDim, VideoCameraIcon, ImageIcon } from '@phosphor-icons/react';
+import { SunDim } from '@phosphor-icons/react';
 import { ServerStatus } from '../ServerStatus';
 import styles from './Navigation.module.css';
 import { useDaylight } from '../../daylight/DaylightContext';
@@ -37,9 +37,31 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
         calendarContext.prefetchDateRange(start, end);
     }, [calendarContext]);
 
-    const navStyle = (activeTab === 'daylight' && themeColors) ? {
-        '--daylight-text-color': themeColors.text
-    } as React.CSSProperties : {};
+    // Find the active tab's theme configuration
+    const activeTabConfig = NAV_TABS.find(tab => {
+        if (tab.isActive) {
+            return tab.isActive(activeTab);
+        }
+        return tab.id === activeTab;
+    });
+
+    // Build dynamic nav styles based on active tab theme or daylight
+    const navStyle = React.useMemo(() => {
+        const styles: React.CSSProperties = {};
+
+        // Daylight mode takes precedence for immersive experience
+        if (activeTab === 'daylight' && themeColors) {
+            styles['--nav-text-color' as any] = themeColors.text;
+            return styles;
+        }
+
+        // Apply background from tab configuration
+        if (activeTabConfig?.theme?.background) {
+            styles['background' as any] = activeTabConfig.theme.background;
+        }
+
+        return styles;
+    }, [activeTab, activeTabConfig, themeColors]);
 
     const handleDaylightClick = () => {
         if (activeTab === 'daylight' && lastTab) {

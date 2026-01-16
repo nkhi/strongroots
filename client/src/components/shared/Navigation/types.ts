@@ -2,6 +2,11 @@ import type { Icon } from '@phosphor-icons/react';
 
 export type TabType = 'habits' | 'todos' | 'journal' | 'memos' | 'next' | 'lists' | 'daylight' | 'vlogs' | 'memories' | 'immich' | 'cap';
 
+export interface ThemeConfig {
+    /** Background color for the navigation container */
+    background?: string;
+}
+
 export interface NavItem {
     id: TabType | string;
     icon: Icon;
@@ -12,6 +17,8 @@ export interface NavItem {
     useDuotone?: boolean;
     onClick?: (options: { onTabChange: (tab: TabType) => void }) => void;
     isActive?: (activeTab: TabType) => boolean;
+    /** Optional theme configuration for this tab */
+    theme?: ThemeConfig;
 }
 
 export interface ExternalLink {

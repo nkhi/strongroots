@@ -15,7 +15,7 @@ export function MemoryButton({ isPanelOpen, onToggle, className }: MemoryButtonP
                 onClick={onToggle}
                 title="Good Moments"
             >
-                <Tray size={20} weight={isPanelOpen ? 'duotone' : 'regular'} className="navIcon" />
+                <Tray size={24} weight={isPanelOpen ? 'duotone' : 'regular'} className="navIcon" />
             </button>
             {isPanelOpen && (
                 <MemoryPanel onClose={onToggle} />

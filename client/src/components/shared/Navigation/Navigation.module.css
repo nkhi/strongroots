@@ -50,7 +50,7 @@
 
 .tabSwitcher {
     display: flex;
-    background: #110C09;
+    background: transparent;
     padding: 4px;
     border-radius: 12px;
     gap: 4px;
@@ -60,12 +60,12 @@
 
 .navContainer.immersive .tabBtn,
 .navContainer.immersive .iconLink {
-    color: var(--daylight-text-color, #888);
+    color: var(--nav-text-color, #888);
 }
 
 .navContainer.immersive .tabBtn.active {
-    color: var(--daylight-text-color, white);
-    border-color: var(--daylight-text-color, rgba(255, 255, 255, 0.1));
+    color: var(--nav-text-color, white);
+    border-color: var(--nav-text-color, rgba(255, 255, 255, 0.1));
 }
 
 .tabBtn {
