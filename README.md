@@ -1,8 +1,16 @@
 # ▶️ Start
 
-Start Menu, aka Start, is my personal dashboard for Habit tracking, Todos, Notes, Journal Entries, Lists, and Goals. 
+Start Menu, aka Start, is my personal dashboard for tracking: 
+- Habits 
+- Todos
+- Notes ([Memos](https://github.com/usememos/memos))
+- Journals
+- Lists
+- Goals
+- Vlogs ([Cap](https://cap.so/docs/self-hosting))
+- Photos ([Immich](https://github.com/immich-app/immich))
 
-I serve this on my local network and access it across different devices. I remixed [Daylight](https://github.com/bakkenbaeck/daylight-web) as a screensaver. I resurrected [Nook](https://github.com/micaiah-buttars/nook) to play background music every hour from Animal Crossing. I also integrated [Cap](https://github.com/CapSoftware/Cap) to record weekly vlogs. _There's also a work mode with restricted data fetching to keep my personal data off the corporate VPN._
+I serve this on my local network and access it from multiple devices via a Tailscale VPN for private tunnelling. I remixed [Daylight](https://github.com/bakkenbaeck/daylight-web) as a screensaver. I resurrected [Nook](https://github.com/micaiah-buttars/nook) to play Animal Crossing background music every hour. I also integrated [Cap](https://github.com/CapSoftware/Cap) to record weekly vlogs. _There's also a work mode with restricted data fetching to keep my personal data off the corporate VPN._
 
 This app exists to make it easy to iterate on *how* I organize myself. Ideally, building a bespoke UX and feature set will encourage consistency in reflection and growth. 
 
@@ -166,18 +174,20 @@ You'll need:
 
 I want to own my data. Nothing is stored in the cloud—everything lives on my own hardware.
 
-### Tabular Data → PostgreSQL
+Tabular Data → PostgreSQL. Habits, todos, journal entries, and all other structured data lives in a **PostgreSQL** database running in Docker on my home server.
 
-Habits, todos, journal entries, and all other structured data lives in a **PostgreSQL** database running in Docker on my home server.
+Video & Photos → Local storage with remote access (Cap/MinIO, Immich Server) 
 
-### Video & Media → Cap + MinIO
+Video recordings from Cap and my personal photo library for Immich are both running as Docker containers on my local server, and the media is stored locally on my giant SSD. 
 
-For video recordings (weekly vlogs, screen recordings), I self-host **[Cap](https://cap.so/)**—an open-source screen recorder and video sharing platform. Both Cap and **[MinIO](https://min.io/)** (S3-compatible object storage) run as Docker containers on my home server.
+**Does this matter? Is this worth running your own VPS?** Yes, it does, and yes, it is. The fact that any Loom employee, or bored Google Photos engineer, can access my personal content feels wrong. A value exchange I didn't really sign up for. What's worse is when companies process your content to train AI models or mine it for data like location, faces, and transcribe it for god knows why. I would rather go through an hour of setup (or days to build this app) once than have to deal with the continuous threat of overreach.
 
 This means:
-- **No cloud subscriptions** — Cap works without paying for their hosted storage
+- **No cloud subscriptions** — free, no account management, no annoying sales emails
+- **No external dependencies** — App works even when Cap Cloud, Immich Cloud, or Memos Cloud go down
 - **Videos stay local** — All recordings are stored on a media drive attached to my home server
-- **S3-compatible API** — Cap talks to MinIO the same way it would talk to AWS S3
+- **Backups** — Way easier to clone and zip local files than try to download them from a cloud platform
+- **Offine-first** - no wifi no problem
 
 <!-- ### How it works:
 
@@ -239,8 +249,9 @@ All data is stored in your own PostgreSQL database. Multi-device access uses Hea
 - [Memos](https://github.com/usememos/memos) - For the  note-taking experience (iframe)
 - [Daylight](https://daylight.today/app/) - For the sun position screensaver inspiration (remade)
 - [Cap](https://cap.so/docs/self-hosting) - For the video recording experience (iframe)
-- [MinIO](https://github.com/minio/minio) - todo - For local media storage (infrastructure)
-- [Headscale](https://github.com/juanfont/headscale) - Wireguard Control Server so no Tailscale account required
+- [Immich](https://github.com/immich-app/immich) - For the photo gallery experience (iframe)
+
+<!-- - [Headscale](https://github.com/juanfont/headscale) - Wireguard Control Server so no Tailscale account required -->
 
 **Libraries:**
 - [Phosphor Icons](https://phosphoricons.com/) - For beautiful, consistent icons
