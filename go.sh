@@ -15,7 +15,8 @@
 #   ./go.sh                  # Start app only (Postgres + backend + frontend)
 #   ./go.sh --with-headscale # Also start Headscale VPN from ~/Desktop/infra/
 #   ./go.sh --with-cap       # Also start Cap video recording services
-#   ./go.sh --with-headscale --with-cap # Start everything
+#   ./go.sh --with-immich    # Also start Immich services from ~/Desktop/immich/
+#   ./go.sh --with-headscale --with-cap --with-immich # Start everything
 #
 # To stop:
 #   - Ctrl+C stops the servers (Docker containers keep running)
@@ -34,11 +35,15 @@ NC='\033[0m' # No Color
 # Parse arguments
 WITH_HEADSCALE=false
 WITH_CAP=false
-if [[ "$1" == "--with-headscale" ]] || [[ "$2" == "--with-headscale" ]]; then
+WITH_IMMICH=false
+if [[ "$1" == "--with-headscale" ]] || [[ "$2" == "--with-headscale" ]] || [[ "$3" == "--with-headscale" ]]; then
   WITH_HEADSCALE=true
 fi
-if [[ "$1" == "--with-cap" ]] || [[ "$2" == "--with-cap" ]]; then
+if [[ "$1" == "--with-cap" ]] || [[ "$2" == "--with-cap" ]] || [[ "$3" == "--with-cap" ]]; then
   WITH_CAP=true
+fi
+if [[ "$1" == "--with-immich" ]] || [[ "$2" == "--with-immich" ]] || [[ "$3" == "--with-immich" ]]; then
+  WITH_IMMICH=true
 fi
 
 # =============================================================================
@@ -52,10 +57,10 @@ cleanup() {
     pkill -P $SERVER_PID 2>/dev/null
   fi
   echo -e "${YELLOW}[SHUTDOWN]${NC} Stopping Docker containers..."
-  
+
   # Stop all containers including those in profiles
   docker compose --profile cap down
-  
+
   echo -e "${GREEN}[SHUTDOWN]${NC} All services stopped."
   exit 0
 }
@@ -66,7 +71,7 @@ start_docker() {
     if [[ "$OSTYPE" == "darwin"* ]] && [ -d "/Applications/Docker.app" ]; then
       echo -e "${YELLOW}[DOCKER]${NC} Docker is not running. Starting Docker Desktop..."
       open -a Docker
-      
+
       # Wait for Docker to be ready (up to 60 seconds)
       DOCKER_RETRIES=60
       while ! docker info > /dev/null 2>&1 && [ $DOCKER_RETRIES -gt 0 ]; do
@@ -74,7 +79,7 @@ start_docker() {
         DOCKER_RETRIES=$((DOCKER_RETRIES-1))
         sleep 1
       done
-      
+
       if ! docker info > /dev/null 2>&1; then
         echo -e "${RED}[DOCKER]${NC} Docker failed to start. Please start Docker Desktop manually."
         exit 1
@@ -93,9 +98,15 @@ start_headscale() {
   echo -e "${GREEN}[DOCKER]${NC} Headscale running on port 8080"
 }
 
+start_immich() {
+  echo -e "${GREEN}[DOCKER]${NC} Starting Immich from /Users/mini/Desktop/immich/..."
+  (cd /Users/mini/Desktop/immich && docker compose up -d)
+  echo -e "${GREEN}[DOCKER]${NC} Immich services running."
+}
+
 start_containers() {
   echo -e "${GREEN}[DOCKER]${NC} Starting Postgres and Memos..."
-  
+
   if [ "$WITH_CAP" = true ]; then
     echo -e "${GREEN}[DOCKER]${NC} Also starting Cap services (MySQL, MinIO, Media Server, Web)..."
     docker compose --profile cap up -d
@@ -119,7 +130,7 @@ start_containers() {
 
   echo -e "${GREEN}[DOCKER]${NC} Postgres is ready!"
   echo -e "${GREEN}[DOCKER]${NC} Memos running on port 5230"
-  
+
   if [ "$WITH_CAP" = true ]; then
     echo -e "${GREEN}[DOCKER]${NC} Cap running on port 3000"
   fi
@@ -161,6 +172,7 @@ trap cleanup SIGINT SIGTERM
 
 start_docker
 [ "$WITH_HEADSCALE" = true ] && start_headscale
+[ "$WITH_IMMICH" = true ] && start_immich
 start_containers
 start_backend
 start_frontend
