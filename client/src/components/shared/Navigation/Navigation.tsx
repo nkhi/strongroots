@@ -37,8 +37,6 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
         calendarContext.prefetchDateRange(start, end);
     }, [calendarContext]);
 
-    const capUrl = import.meta.env.VITE_CAP_URL;
-
     const navStyle = (activeTab === 'daylight' && themeColors) ? {
         '--daylight-text-color': themeColors.text
     } as React.CSSProperties : {};
@@ -74,11 +72,11 @@ export function Navigation({ activeTab, lastTab, onTabChange, workMode = false }
             <div className={styles.tabSwitcher}>
                 {NAV_TABS.filter(tab => !workMode || tab.showInWorkMode).map((tab) => {
                     const Icon = tab.icon;
-                    const isActive = activeTab === tab.id || (tab.id === 'immich' && activeTab === 'vlogs');
+                    const isActive = tab.isActive ? tab.isActive(activeTab) : activeTab === tab.id;
 
                     const handleClick = () => {
                         if (tab.onClick) {
-                            tab.onClick({ onTabChange, capUrl });
+                            tab.onClick({ onTabChange });
                         } else {
                             onTabChange(tab.id as TabType);
                         }

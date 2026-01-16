@@ -15,6 +15,7 @@ import { ApiErrorProvider, useApiError } from './components/shared/ApiErrorConte
 import { ApiErrorToast } from './components/shared/ApiErrorToast';
 import { setGlobalErrorReporter, clearGlobalErrorReporter } from './api/errorReporter';
 import { Immich } from './components/immich/Immich';
+import { Cap } from './components/cap/Cap';
 
 // Detect work mode from URL query params (?mode=work)
 const urlParams = new URLSearchParams(window.location.search);
@@ -62,6 +63,7 @@ function AppContent() {
           {!WORK_MODE && activeTab === 'next' && <Next />}
           {!WORK_MODE && activeTab === 'lists' && <Lists />}
           {!WORK_MODE && activeTab === 'immich' && <Immich />}
+          {!WORK_MODE && activeTab === 'cap' && <Cap />}
         </main>
       </div>
       <ApiErrorToast />

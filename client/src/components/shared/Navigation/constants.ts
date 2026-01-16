@@ -10,7 +10,8 @@ import {
     ButterflyIcon,
     CalendarIcon
 } from '@phosphor-icons/react';
-import type { NavItem, ExternalLink } from './types';
+import { API_BASE_URL } from '../../../config';
+import type { NavItem, ExternalLink, TabType } from './types';
 
 export const NAV_TABS: NavItem[] = [
     {
@@ -53,15 +54,17 @@ export const NAV_TABS: NavItem[] = [
         id: 'immich',
         icon: ImageIcon,
         showInWorkMode: false,
-        useDuotone: true
+        useDuotone: true,
+        isActive: (activeTab) => activeTab === 'immich' || activeTab === 'vlogs'
     },
     {
-        id: 'vlogs_link',
+        id: 'cap',
         icon: VideoCameraIcon,
         showInWorkMode: false,
         useDuotone: true,
-        onClick: ({ capUrl }) => {
-            if (capUrl) window.open(capUrl, '_blank');
+        onClick: ({ onTabChange }) => {
+            fetch(`${API_BASE_URL}/api/services/cap/start`, { method: 'POST' }).catch(console.error);
+            onTabChange('cap');
         }
     }
 ];

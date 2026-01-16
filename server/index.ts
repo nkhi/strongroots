@@ -11,6 +11,7 @@ import nextRoutes from './routes/next.ts';
 import listsRoutes from './routes/lists.ts';
 import calendarRoutes from './routes/calendar.ts';
 import memoriesRoutes from './routes/memories.ts';
+import servicesRoutes from './routes/services.ts';
 import { checkCalendarConnection, syncCalendarEvents } from './services/calendarService.ts';
 
 console.log('[SERVER] 🏁 Starting server process...');
@@ -87,8 +88,9 @@ app.use('/', nextRoutes);
 app.use('/', listsRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/', memoriesRoutes);
+app.use('/api/services', servicesRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000; // Changed from 3000 to avoid conflict with Cap
 app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log(`[SERVER] 🚀 API running on http://0.0.0.0:${PORT}`);

@@ -4,7 +4,7 @@
 # =============================================================================
 # This script starts all services needed for development:
 #   1. PostgreSQL database (Docker)
-#   2. Backend API server (Bun + Express on port 3000)
+#   2. Backend API server (Bun + Express on port 4000)
 #   3. Frontend dev server (Vite on port 5173)
 #
 # Prerequisites:
@@ -14,6 +14,8 @@
 # Usage:
 #   ./go.sh                  # Start app only (Postgres + backend + frontend)
 #   ./go.sh --with-headscale # Also start Headscale VPN from ~/Desktop/infra/
+#   ./go.sh --with-cap       # Also start Cap video recording services
+#   ./go.sh --with-headscale --with-cap # Start everything
 #
 # To stop:
 #   - Ctrl+C stops the servers (Docker containers keep running)
@@ -31,8 +33,12 @@ NC='\033[0m' # No Color
 
 # Parse arguments
 WITH_HEADSCALE=false
-if [[ "$1" == "--with-headscale" ]]; then
+WITH_CAP=false
+if [[ "$1" == "--with-headscale" ]] || [[ "$2" == "--with-headscale" ]]; then
   WITH_HEADSCALE=true
+fi
+if [[ "$1" == "--with-cap" ]] || [[ "$2" == "--with-cap" ]]; then
+  WITH_CAP=true
 fi
 
 # =============================================================================
@@ -46,7 +52,10 @@ cleanup() {
     pkill -P $SERVER_PID 2>/dev/null
   fi
   echo -e "${YELLOW}[SHUTDOWN]${NC} Stopping Docker containers..."
-  docker compose down
+  
+  # Stop all containers including those in profiles
+  docker compose --profile cap down
+  
   echo -e "${GREEN}[SHUTDOWN]${NC} All services stopped."
   exit 0
 }
@@ -86,7 +95,13 @@ start_headscale() {
 
 start_containers() {
   echo -e "${GREEN}[DOCKER]${NC} Starting Postgres and Memos..."
-  docker compose up -d postgres memos
+  
+  if [ "$WITH_CAP" = true ]; then
+    echo -e "${GREEN}[DOCKER]${NC} Also starting Cap services (MySQL, MinIO, Media Server, Web)..."
+    docker compose --profile cap up -d
+  else
+    docker compose up -d postgres memos
+  fi
 
   # Wait for Postgres to be healthy
   echo -e "${YELLOW}[DOCKER]${NC} Waiting for Postgres to be ready..."
@@ -104,6 +119,10 @@ start_containers() {
 
   echo -e "${GREEN}[DOCKER]${NC} Postgres is ready!"
   echo -e "${GREEN}[DOCKER]${NC} Memos running on port 5230"
+  
+  if [ "$WITH_CAP" = true ]; then
+    echo -e "${GREEN}[DOCKER]${NC} Cap running on port 3000"
+  fi
 }
 
 start_backend() {
